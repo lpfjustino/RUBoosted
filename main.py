@@ -1,13 +1,18 @@
 import urllib3
 import requests
 
+import player_base as pb
+import numpy as np
+
 class Summoner:
     def __init__(self, nick):
+        self.nick = nick
+
         sum_id, acc_id = ids_by_nick(nick)
         self.sum_id = sum_id
         self.acc_id = acc_id
-        self.ranked_stats = ranked_stats(self.sum_id)
-        self.matches = matches(self.acc_id)
+        # self.ranked_stats = ranked_stats(self.sum_id)
+        # self.matches = matches(self.acc_id)
         self.leagues = leagues(self.sum_id)
 
 def ids_by_nick(nick):
@@ -67,10 +72,19 @@ def leagues(sum_id):
     }
 
     r = requests.get(url, headers=headers);
-    leagues = r.json()[0]
+    leagues = r.json()
     return leagues
 
+summoner_names = ["Luispfj","Kail","Joxer","Soul Oblivious","Tomate Ervilha","Lyanhelios","TunderB","LionPrey","Sr genau","JuviaSutcliff","ReichsKanzler","Sickhazardinho","JessicaPS","enemysama","Yasu","Jiripo","Jarvan","Sereia Bjork","Saph1ra","Major Octavius","Princesa Lesgou","Moonsfury","l Lady Gaga l","Bidu de la Rocha","Prince Miles","peterp4nda","Portavoz92","GibaNelesXD","CólicaDeDeus","Foca II","Galinha Rafinha","MSouza01","SoulKanon ","Enleanor","toni mesmo","Vendo Bolo","lucasl42","torresgui","uema","XdextroierX","RunningSimulator","Fabricio201","ALGUEM ME MATE ","R2D2","RbRoDrIgO","RaposaVikingppppp"]
+summoners = []
+base = []
+for i,name in enumerate(summoner_names):
+    print('Creating summoner ', i, ': ', name)
+    summoner = Summoner(name)
+    print('Done')
+    print(i+1,'/',len(summoner_names))
+    summoners.append(summoner)
+    base += pb.fetch_all(summoners)
 
-
-summoner = Summoner("luispfj")
-print(summoner.leagues)
+print(base)
+print(len(base))
