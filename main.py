@@ -3,31 +3,21 @@ import requests
 
 import player_base as pb
 import numpy as np
+import matplotlib.pyplot as plt
 
-from summoner import Summoner
+import summoner as s
+import stats_fetcher as sf
 
-# s = Summoner("Luispfj")
-# s.serialize_summoner()
+sf.cache_all_summoners(1317)
+
+# print('begun')
+# a = s.get_cached_summoners_instances()
+# print('read')
+# n_matches = []
+# print('iterating')
+# for pl in a:
+#     s8 = sf.filter_s8_matches(pl)
+#     n_matches.append(len(s8))
 #
-# is_s8_match = lambda match: match['season'] == 8
-# season8 = [is_s8_match(match) for match in s.matches]
-# matches = np.array(s.matches)
-# s8matches = matches[season8]
-
-with open('base.txt', encoding="utf8") as f:
-    content = f.readlines()[0]
-    summoners = str.split(content,',')
-
-for summoner in summoners:
-    print(summoner)
-    s = Summoner(summoner)
-    s.serialize_summoner()
-
-    is_s8_match = lambda match: match['season'] == 8
-    season8 = [is_s8_match(match) for match in s.matches]
-    matches = np.array(s.matches)
-    print(len(matches))
-    s8matches = matches[season8]
-
-    print(len(s8matches))
-
+# print(len(a), ' analyzed')
+# print(n_matches)

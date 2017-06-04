@@ -33,9 +33,8 @@ def build_player_base():
     base = np.unique(base)
     return base, summoners
 
-base, _ = build_player_base()
-with open('base.txt', 'w', encoding='utf8') as outfile:
-    base = ','.join(base)
-    base.replace(' ', '')
-    outfile.write(base)
-print(base)
+# base, _ = build_player_base()
+# with open('base.txt', 'w', encoding='utf8') as outfile:
+#     base = ','.join(map(str,base))
+#     outfile.write(base)
+# print(base)
