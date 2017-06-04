@@ -40,8 +40,11 @@ def ranked_stats(sum_id, verbose=True):
     if verbose:
         print(r.json())
 
+    if 'status' in r.json() and r.json()['status']['status_code'] == 404:
+        return []
+
     # If request failed, repeat it
-    while ('champions' not in r.json() == True):
+    while 'champions' not in r.json():
         r = requests.get(url, headers=headers)
 
     stats = r.json()['champions']
@@ -91,7 +94,7 @@ def cache_all_summoners(start=0):
     summoners = get_base_summoners()
 
     for i, summoner in enumerate(summoners[start:]):
-        print("Summoner ", start + i, "/", len(summoners), "("+str(start/len(summoners))+"%) : ", summoner)
+        print("Summoner ", start + i, "/", len(summoners), "("+str((start+i)/len(summoners))+"%) : ", summoner)
         s = Summoner(summoner)
         s.serialize_summoner()
 
