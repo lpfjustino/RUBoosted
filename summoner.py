@@ -9,8 +9,8 @@ class Summoner:
         self.sum_id = sum_id
         self.acc_id = acc_id
         # self.ranked_stats = ranked_stats(self.sum_id)
-        self.matches = matches(self.acc_id)
-        # self.leagues = leagues(self.sum_id)
+        # self.matches = matches(self.acc_id)
+        self.leagues = leagues(self.sum_id)
 
     def toJSON(self):
         return json.dumps(self, default=lambda o: o.__dict__,

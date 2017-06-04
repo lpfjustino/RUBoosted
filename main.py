@@ -6,11 +6,28 @@ import numpy as np
 
 from summoner import Summoner
 
-s = Summoner("Luispfj")
-s.serialize_summoner()
+# s = Summoner("Luispfj")
+# s.serialize_summoner()
+#
+# is_s8_match = lambda match: match['season'] == 8
+# season8 = [is_s8_match(match) for match in s.matches]
+# matches = np.array(s.matches)
+# s8matches = matches[season8]
 
-is_s8_match = lambda match: match['season'] == 8
-season8 = [is_s8_match(match) for match in s.matches]
-a = np.array(s.matches)
-test = a[season8]
-print(len(test))
+with open('base.txt', encoding="utf8") as f:
+    content = f.readlines()[0]
+    summoners = str.split(content,',')
+
+for summoner in summoners:
+    print(summoner)
+    s = Summoner(summoner)
+    s.serialize_summoner()
+
+    is_s8_match = lambda match: match['season'] == 8
+    season8 = [is_s8_match(match) for match in s.matches]
+    matches = np.array(s.matches)
+    print(len(matches))
+    s8matches = matches[season8]
+
+    print(len(s8matches))
+

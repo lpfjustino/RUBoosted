@@ -19,7 +19,7 @@ def fetch_all(summoners_list):
 
 
 def build_player_base():
-    summoner_names = ["Luispfj","Kail","Joxer","Soul Oblivious","Tomate Ervilha","Lyanhelios","TunderB","LionPrey","Sr genau","JuviaSutcliff","ReichsKanzler","Sickhazardinho","JessicaPS","enemysama","Yasu","Jiripo","Jarvan","Sereia Bjork","Saph1ra","Major Octavius","Princesa Lesgou","Moonsfury","l Lady Gaga l","Bidu de la Rocha","Prince Miles","peterp4nda","Portavoz92","GibaNelesXD","CólicaDeDeus","Foca II","Galinha Rafinha","MSouza01","SoulKanon ","Enleanor","toni mesmo","Vendo Bolo","lucasl42","torresgui","uema","XdextroierX","RunningSimulator","Fabricio201","ALGUEM ME MATE ","R2D2","RbRoDrIgO","RaposaVikingppppp"]
+    summoner_names = ["Luispfj","Kail","Joxer","Soul Oblivious","Tomate Ervilha","Lyanhelios","TunderB","LionPrey","Sr genau","JuviaSutcliff","ReichsKanzler","Sickhazardinho","JessicaPS","enemysama","Yasu","Jiripo","Jarvan","Sereia Bjork","Saph1ra","Princesa Lesgou","Moonsfury","l Lady Gaga l","Bidu de la Rocha","Prince Miles","peterp4nda","Portavoz92","GibaNelesXD","CólicaDeDeus","Foca II","Galinha Rafinha","MSouza01","SoulKanon ","Enleanor","toni mesmo","Vendo Bolo","lucasl42","torresgui","uema","XdextroierX","RunningSimulator","Fabricio201","ALGUEM ME MATE ","R2D2","RbRoDrIgO","Desperate Poet","CrXGG","DuduBaratela"]
     summoners = []
     base = []
     for i,name in enumerate(summoner_names):
@@ -30,4 +30,12 @@ def build_player_base():
         summoners.append(summoner)
         base += fetch_all(summoners)
 
+    base = np.unique(base)
     return base, summoners
+
+base, _ = build_player_base()
+with open('base.txt', 'w', encoding='utf8') as outfile:
+    base = ','.join(base)
+    base.replace(' ', '')
+    outfile.write(base)
+print(base)

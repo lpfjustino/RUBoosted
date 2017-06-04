@@ -1,7 +1,7 @@
 import requests
 
 def ids_by_nick(nick):
-    url = "https://br1.api.riotgames.com/lol/summoner/v3/summoners/by-name/luispfj?api_key=RGAPI-b3a0e588-5085-43cc-8778-bb2394a4541d"
+    url = "https://br1.api.riotgames.com/lol/summoner/v3/summoners/by-name/"+nick+"?api_key=RGAPI-b3a0e588-5085-43cc-8778-bb2394a4541d"
     headers = {
     "Origin": "https://developer.riotgames.com",
     "Accept-Charset": "application/x-www-form-urlencoded; charset=UTF-8",
