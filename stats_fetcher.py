@@ -4,7 +4,7 @@ import requests
 from summoner import Summoner, get_base_summoners
 
 def ids_by_nick(nick, verbose=True):
-    print(url)
+    url = "https://br1.api.riotgames.com/lol/summoner/v3/summoners/by-name/"+nick+"?api_key=RGAPI-b3a0e588-5085-43cc-8778-bb2394a4541d"
     headers = {
     "Origin": "https://developer.riotgames.com",
     "Accept-Charset": "application/x-www-form-urlencoded; charset=UTF-8",
@@ -91,7 +91,7 @@ def cache_all_summoners(start=0):
     summoners = get_base_summoners()
 
     for i, summoner in enumerate(summoners[start:]):
-        print("Summoner ", start + i, "/", len(summoners), " : ", summoner)
+        print("Summoner ", start + i, "/", len(summoners), "("+str(start/len(summoners))+"%) : ", summoner)
         s = Summoner(summoner)
         s.serialize_summoner()
 
