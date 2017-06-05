@@ -7,8 +7,10 @@ import matplotlib.pyplot as plt
 
 import summoner as s
 import stats_fetcher as sf
+import sys
 
-sf.cache_all_summoners(3005)
+#sf.cache_all_summoners(sys.argv[2])
+sf.cache_all_summoners(4660)
 
 # print('begun')
 # a = s.get_cached_summoners_instances()

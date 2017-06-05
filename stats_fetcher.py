@@ -12,7 +12,7 @@ class SummonerNotExists(Exception):
          return repr(self.value)
 
 class StatisticsFetcher():
-    def __init__(self, dev_key="", verbose="True"):
+    def __init__(self, dev_key="", verbose="False"):
         self.verbose = verbose
 
         if dev_key == "":
@@ -159,7 +159,7 @@ def cache_all_summoners(start=0):
         try:
             s = sum.Summoner(summoner)
         except SummonerNotExists:
-            print('Summoner', sum.nick, 'does not exist. Skipping.')
+            print('Summoner does not exist. Skipping.')
             continue
         if(s.acc_id is not None):
             s.serialize_summoner()
