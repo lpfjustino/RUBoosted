@@ -1,5 +1,3 @@
-import sys
-
 import stats_fetcher as stf
 import json
 import time
@@ -7,16 +5,20 @@ import time
 class Summoner:
     def __init__(self, nick, cached=False, fill=True, verbose=True):
         if not cached:
-            sf = stf.StatisticsFetcher(sys.argv[1])
+            sf = stf.StatisticsFetcher()
             self.nick = nick
-            sum_id, acc_id = sf.ids_by_nick(nick, verbose=verbose)
-            self.sum_id = sum_id
-            self.acc_id = acc_id
 
-            if self.sum_id is not None and self.acc_id is not None:
-                self.ranked_stats = sf.ranked_stats(self.sum_id, verbose=verbose)
-                self.matches = sf.matches(self.acc_id, verbose=verbose)
-                self.leagues = sf.leagues(self.sum_id, verbose=verbose)
+            try:
+                sum_id, acc_id, ranked_stats, matches, leagues = sf.fetch_all(nick)
+
+                self.sum_id = sum_id
+                self.acc_id = acc_id
+                self.ranked_stats = ranked_stats
+                self.matches = matches
+                self.leagues = leagues
+
+            except Exception as e:
+                raise e
         else:
             self.deserialize_summoner(nick, fill)
 

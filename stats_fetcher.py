@@ -3,11 +3,30 @@ import time
 import requests
 import summoner as sum
 
-class StatisticsFetcher():
-    def __init__(self, dev_key):
-        self.dev_key = dev_key
+import sys
 
-    def ids_by_nick(self, nick, verbose=True):
+class SummonerNotExists(Exception):
+     def __init__(self, value):
+         self.value = value
+     def __str__(self):
+         return repr(self.value)
+
+class StatisticsFetcher():
+    def __init__(self, dev_key="", verbose="True"):
+        if dev_key == "":
+            self.dev_key = sys.argv[1]
+        else:
+            self.dev_key = dev_key
+
+        self.responses = {
+            'ranked_stats': {},
+            'ids_by_nick': {},
+            'matches': {},
+            'leagues': {}
+        }
+        self.failed = ''
+
+    def ids_by_nick(self, nick):
         url = "https://br1.api.riotgames.com/lol/summoner/v3/summoners/by-name/"+nick+"?api_key="+self.dev_key
         headers = {
         "Origin": "https://developer.riotgames.com",
@@ -18,24 +37,22 @@ class StatisticsFetcher():
         }
 
         r = requests.get(url, headers=headers)
-        if verbose:
-            print(r.json())
+        self.responses['ids_by_nick'] = r
 
         # Summoner not found
         if 'status' in r.json() and r.json()['status']['status_code'] == 404:
-            return None, None
+            raise SummonerNotExists('Summoner not found')
 
-        # If request failed, repeat it
-        while 'id' not in r.json() or 'accountId' not in r.json():
-            time.sleep(300)
-            r = requests.get(url, headers=headers)
+        # Request failed
+        if 'id' not in r.json() or 'accountId' not in r.json():
+            raise Exception('id or accountId not in response')
 
         sum_id = r.json()['id']
         acc_id = r.json()['accountId']
         return sum_id, acc_id
 
 
-    def ranked_stats(self, sum_id, verbose=True):
+    def ranked_stats(self, sum_id):
         url = "https://br.api.riotgames.com/api/lol/BR/v1.3/stats/by-summoner/"+str(sum_id)+"/ranked?season=SEASON2017&api_key="+self.dev_key
         headers = {
         "Origin": "https://developer.riotgames.com",
@@ -46,22 +63,20 @@ class StatisticsFetcher():
         }
 
         r = requests.get(url, headers=headers)
-        if verbose:
-            print(r.json())
+        self.responses['ranked_stats'] = r
 
         if 'status' in r.json() and r.json()['status']['status_code'] == 404:
             return []
 
-        # If request failed, repeat it
-        while 'champions' not in r.json():
-            time.sleep(300)
-            r = requests.get(url, headers=headers)
+        # Request failed
+        if 'champions' not in r.json():
+            raise Exception('champions not in response')
 
         stats = r.json()['champions']
         return stats
 
 
-    def matches(self, acc_id, verbose=True):
+    def matches(self, acc_id):
         url = "https://br1.api.riotgames.com/lol/match/v3/matchlists/by-account/"+str(acc_id)+"?api_key="+self.dev_key
         headers = {
             "Origin": "https://developer.riotgames.com",
@@ -72,19 +87,17 @@ class StatisticsFetcher():
         }
 
         r = requests.get(url, headers=headers)
-        if verbose:
-            print(r.json())
+        self.responses['matches'] = r
 
         # If request failed, repeat it
-        while 'matches' not in r.json():
-            time.sleep(300)
-            r = requests.get(url, headers=headers)
+        if 'matches' not in r.json():
+            raise Exception('matches not in response')
 
         matches = r.json()['matches']
         return matches
 
 
-    def leagues(self, sum_id, verbose=True):
+    def leagues(self, sum_id):
         url = "https://br1.api.riotgames.com/lol/league/v3/leagues/by-summoner/"+str(sum_id)+"?api_key="+self.dev_key
         headers = {
         "Origin": "https://developer.riotgames.com",
@@ -95,10 +108,33 @@ class StatisticsFetcher():
         }
 
         r = requests.get(url, headers=headers)
-        if verbose:
-            print(r.json())
+        self.responses['leagues'] = r
 
         return r.json()
+
+    def fetch_all(self, nick):
+        try:
+            sum_id, acc_id = self.ids_by_nick(nick)
+            sum_id = sum_id
+            acc_id = acc_id
+
+            try:
+                ranked_stats = self.ranked_stats(sum_id)
+                matches = self.matches(acc_id)
+                leagues = self.leagues(sum_id)
+            except Exception as e:
+                print(e, ". We'll wait a minute before trying again")
+                time.sleep(60)
+                return self.fetch_all(nick)
+
+        except SummonerNotExists as e:
+            raise e
+        except Exception as e:
+            print(e, ". We'll wait a minute before trying again")
+            time.sleep(60)
+            return self.fetch_all(nick)
+
+        return sum_id, acc_id, ranked_stats, matches, leagues
 
 
 def cache_all_summoners(start=0):
