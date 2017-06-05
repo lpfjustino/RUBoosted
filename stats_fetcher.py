@@ -17,6 +17,10 @@ def ids_by_nick(nick, verbose=True):
     if verbose:
         print(r.json())
 
+    # Summoner not found
+    if 'status' in r.json() and r.json()['status']['status_code'] == 404:
+        return None, None
+
     # If request failed, repeat it
     while 'id' not in r.json() or 'accountId' not in r.json():
         time.sleep(300)
@@ -99,7 +103,8 @@ def cache_all_summoners(start=0):
     for i, summoner in enumerate(summoners[start:]):
         print("Summoner ", start + i, "/", len(summoners), "("+str((start+i)/len(summoners))+"%) : ", summoner)
         s = Summoner(summoner)
-        s.serialize_summoner()
+        if(s.acc_id is not None):
+            s.serialize_summoner()
 
 def filter_s8_matches(summoner):
     def is_s8_match(match): return match['season'] == 8
