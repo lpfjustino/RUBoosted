@@ -24,7 +24,6 @@ class StatisticsFetcher():
             'matches': {},
             'leagues': {}
         }
-        self.failed = ''
 
     def ids_by_nick(self, nick):
         url = "https://br1.api.riotgames.com/lol/summoner/v3/summoners/by-name/"+nick+"?api_key="+self.dev_key
@@ -113,11 +112,13 @@ class StatisticsFetcher():
         return r.json()
 
     def fetch_all(self, nick):
+        # Tries to find summoner
         try:
             sum_id, acc_id = self.ids_by_nick(nick)
             sum_id = sum_id
             acc_id = acc_id
 
+            # Tries to fetch all statistics
             try:
                 ranked_stats = self.ranked_stats(sum_id)
                 matches = self.matches(acc_id)
@@ -131,18 +132,33 @@ class StatisticsFetcher():
             raise e
         except Exception as e:
             print(e, ". We'll wait a minute before trying again")
+
+            if self.verbose:
+                self.log_responses()
+
             time.sleep(60)
             return self.fetch_all(nick)
 
+        if self.verbose:
+            self.log_responses()
         return sum_id, acc_id, ranked_stats, matches, leagues
 
+
+    def log_responses(self):
+        for key, value in self.responses.items():
+            print('\t',key, value)
 
 def cache_all_summoners(start=0):
     summoners = sum.get_base_summoners()
 
     for i, summoner in enumerate(summoners[start:]):
         print("Summoner ", start + i, "/", len(summoners), "("+str((start+i)/len(summoners))+"%) : ", summoner)
-        s = sum.Summoner(summoner)
+
+        try:
+            s = sum.Summoner(summoner)
+        except SummonerNotExists:
+            print('Summoner', sum.nick, 'does not exist. Skipping.')
+            continue
         if(s.acc_id is not None):
             s.serialize_summoner()
 

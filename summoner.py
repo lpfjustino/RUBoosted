@@ -4,6 +4,7 @@ import time
 
 class Summoner:
     def __init__(self, nick, cached=False, fill=True, verbose=True):
+        self.verbose = verbose
         if not cached:
             sf = stf.StatisticsFetcher()
             self.nick = nick
