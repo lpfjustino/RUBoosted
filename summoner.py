@@ -3,7 +3,7 @@ import json
 import time
 
 class Summoner:
-    def __init__(self, nick, cached=False, fill=True, verbose=False):
+    def __init__(self, nick, cached=False, fill=True, verbose=True):
         if not cached:
             self.nick = nick
             sum_id, acc_id = sf.ids_by_nick(nick, verbose=verbose)

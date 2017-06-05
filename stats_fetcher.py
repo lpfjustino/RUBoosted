@@ -19,6 +19,7 @@ def ids_by_nick(nick, verbose=True):
 
     # If request failed, repeat it
     while 'id' not in r.json() or 'accountId' not in r.json():
+        time.sleep(300)
         r = requests.get(url, headers=headers)
 
     sum_id = r.json()['id']
@@ -45,6 +46,7 @@ def ranked_stats(sum_id, verbose=True):
 
     # If request failed, repeat it
     while 'champions' not in r.json():
+        time.sleep(300)
         r = requests.get(url, headers=headers)
 
     stats = r.json()['champions']
@@ -67,6 +69,7 @@ def matches(acc_id, verbose=True):
 
     # If request failed, repeat it
     while 'matches' not in r.json():
+        time.sleep(300)
         r = requests.get(url, headers=headers)
 
     matches = r.json()['matches']
