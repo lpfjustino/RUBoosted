@@ -3,8 +3,7 @@ import json
 import time
 
 class Summoner:
-    def __init__(self, nick, cached=False, fill=True, verbose=True):
-        self.verbose = verbose
+    def __init__(self, nick, cached=False, fill=True):
         if not cached:
             sf = stf.StatisticsFetcher()
             self.nick = nick

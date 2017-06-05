@@ -13,6 +13,8 @@ class SummonerNotExists(Exception):
 
 class StatisticsFetcher():
     def __init__(self, dev_key="", verbose="True"):
+        self.verbose = verbose
+
         if dev_key == "":
             self.dev_key = sys.argv[1]
         else:
@@ -146,7 +148,7 @@ class StatisticsFetcher():
 
     def log_responses(self):
         for key, value in self.responses.items():
-            print('\t',key, value)
+            print('\t',key, value, value.json())
 
 def cache_all_summoners(start=0):
     summoners = sum.get_base_summoners()
