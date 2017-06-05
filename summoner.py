@@ -1,10 +1,13 @@
-import stats_fetcher as sf
+import sys
+
+import stats_fetcher as stf
 import json
 import time
 
 class Summoner:
     def __init__(self, nick, cached=False, fill=True, verbose=True):
         if not cached:
+            sf = stf.StatisticsFetcher(sys.argv[1])
             self.nick = nick
             sum_id, acc_id = sf.ids_by_nick(nick, verbose=verbose)
             self.sum_id = sum_id
