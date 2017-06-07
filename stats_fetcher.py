@@ -66,6 +66,7 @@ class StatisticsFetcher():
         r = requests.get(url, headers=headers)
         self.responses['ranked_stats'] = r
 
+        # Player does not play ranked games
         if 'status' in r.json() and r.json()['status']['status_code'] == 404:
             return []
 
@@ -109,6 +110,10 @@ class StatisticsFetcher():
         }
 
         r = requests.get(url, headers=headers)
+
+        if 'entries' not in r.json()[0]:
+            raise Exception('entries not in response')
+
         self.responses['leagues'] = r
 
         return r.json()
@@ -127,6 +132,8 @@ class StatisticsFetcher():
                 leagues = self.leagues(sum_id)
             except Exception as e:
                 print(e, ". We'll wait a minute before trying again")
+                if self.verbose:
+                    self.log_responses()
                 time.sleep(60)
                 return self.fetch_all(nick)
 
@@ -134,6 +141,8 @@ class StatisticsFetcher():
             raise e
         except Exception as e:
             print(e, ". We'll wait a minute before trying again")
+            if self.verbose:
+                self.log_responses()
 
             if self.verbose:
                 self.log_responses()
@@ -148,7 +157,7 @@ class StatisticsFetcher():
 
     def log_responses(self):
         for key, value in self.responses.items():
-            print('\t',key, value, value.json())
+            print('\t',key, value)
 
 def cache_all_summoners(start=0):
     summoners = sum.get_base_summoners()
@@ -164,8 +173,18 @@ def cache_all_summoners(start=0):
         if(s.acc_id is not None):
             s.serialize_summoner()
 
-def filter_s8_matches(summoner):
-    def is_s8_match(match): return match['season'] == 8
-    season8 = [is_s8_match(match) for match in summoner.matches]
-    all_matches = np.array(summoner.matches)
-    return all_matches[season8]
+def cache_summoner(k):
+    summoners = sum.get_base_summoners()
+
+    summoner = summoners[k]
+    print("Summoner ", k, ": ", summoner)
+
+    try:
+        s = sum.Summoner(summoner)
+    except SummonerNotExists:
+        print('Summoner does not exist. Skipping.')
+
+    if(s.acc_id is not None):
+        s.serialize_summoner()
+
+
