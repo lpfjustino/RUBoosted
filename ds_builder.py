@@ -32,14 +32,16 @@ def tier_division(summoner_instance):
 
     return solo_q_tier, solo_q_division, flex_tier, flex_division
 
-def w_mean_kda(ranked_stats):
+def stats_per_champ(ranked_stats):
     kdas = []
+    dmgs = []
     weights = []
 
     for champ in ranked_stats:
         kills = champ['stats']['totalChampionKills']
         deaths = champ['stats']['totalDeathsPerSession']
         assists = champ['stats']['totalAssists']
+        dmg = champ['stats']['totalDamageDealt']
         games_played = champ['stats']['totalSessionsPlayed']
 
         if deaths == 0:
@@ -47,18 +49,20 @@ def w_mean_kda(ranked_stats):
         else:
             kda = (kills + assists) / deaths
 
-        kdas.append(kda)
         weights.append(games_played)
+        kdas.append(kda)
+        dmgs.append(dmg)
 
-    avg = np.average(kdas, weights=weights)
-    return avg
+    avg_kda = np.average(kdas, weights=weights)
+    avg_dmg = np.average(dmgs, weights=weights)
+    return avg_kda, avg_dmg
 
 def dataset_v1():
     base = s.get_base_summoners()
     print('Building begun')
     start_read_time = time.time()
-    ds = open('dataset.txt', "w", encoding="utf8")
-    ds.write('id\tnick\tn_matches\tsolo_q_tier\tsoloq_division\tflex_tier\tflex_division\n')
+    ds = open('dataset2.txt', "w", encoding="utf8")
+    ds.write('id\tnick\tn_matches\tkda\tdmg\tsolo_q_tier\tsolo_q_division\tflex_tier\tflex_division\n')
 
     for i, sum in enumerate(base[1:100]):
         try:
@@ -67,17 +71,18 @@ def dataset_v1():
             print(sum, 'failed.', e)
             continue
 
+        print(i, sum)
         summoner_instance = s.Summoner(sum, cached=True, fill=False)
 
         solo_q_tier, solo_q_division, flex_tier, flex_division = tier_division(summoner_instance)
         _, n_matches = filter_s8_matches(summoner_instance.matches)
-        kda = w_mean_kda(summoner_instance.ranked_stats)
+        kda, dmg = stats_per_champ(summoner_instance.ranked_stats)
 
         id = i
         nick = summoner_instance.nick
         time.sleep(10)
 
-        ds.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (id, nick, n_matches, solo_q_tier, solo_q_division, flex_tier, flex_division))
+        ds.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (id, nick, n_matches, kda, dmg, solo_q_tier, solo_q_division, flex_tier, flex_division))
 
 
     end_read_time = time.time()
