@@ -1,10 +1,11 @@
 import summoner as s
 import time
+import numpy as np
 
-def filter_s8_matches(summoner):
+def filter_s8_matches(matches):
     def is_s8_match(match): return match['season'] == 8
-    season8 = [is_s8_match(match) for match in summoner.matches]
-    all_matches = np.array(summoner.matches)
+    season8 = [is_s8_match(match) for match in matches]
+    all_matches = np.array(matches)
     return all_matches[season8], len(all_matches[season8])
 
 def tier_division(summoner_instance):
@@ -31,6 +32,27 @@ def tier_division(summoner_instance):
 
     return solo_q_tier, solo_q_division, flex_tier, flex_division
 
+def w_mean_kda(ranked_stats):
+    kdas = []
+    weights = []
+
+    for champ in ranked_stats:
+        kills = champ['stats']['totalChampionKills']
+        deaths = champ['stats']['totalDeathsPerSession']
+        assists = champ['stats']['totalAssists']
+        games_played = champ['stats']['totalSessionsPlayed']
+
+        if deaths == 0:
+            kda = (kills + assists)
+        else:
+            kda = (kills + assists) / deaths
+
+        kdas.append(kda)
+        weights.append(games_played)
+
+    avg = np.average(kdas, weights=weights)
+    return avg
+
 def dataset_v1():
     base = s.get_base_summoners()
     print('Building begun')
@@ -38,20 +60,25 @@ def dataset_v1():
     ds = open('dataset.txt', "w", encoding="utf8")
     ds.write('id\tnick\tn_matches\tsolo_q_tier\tsoloq_division\tflex_tier\tflex_division\n')
 
-    for i, sum in enumerate(base[0:1000]):
+    for i, sum in enumerate(base[1:100]):
         try:
-            with open('summoners/' + sum + '.txt', encoding="utf8") as f:
-                summoner_instance = s.Summoner(sum, cached=True, fill=False)
+            f = open('summoners/' + sum + '.txt', encoding="utf8")
+        except Exception as e:
+            print(sum, 'failed.', e)
+            continue
 
-                solo_q_tier, solo_q_division, flex_tier, flex_division = tier_division(summoner_instance)
+        summoner_instance = s.Summoner(sum, cached=True, fill=False)
 
-                id = i
-                nick = summoner_instance.nick
-                n_matches = len(summoner_instance.matches)
+        solo_q_tier, solo_q_division, flex_tier, flex_division = tier_division(summoner_instance)
+        _, n_matches = filter_s8_matches(summoner_instance.matches)
+        kda = w_mean_kda(summoner_instance.ranked_stats)
 
-                ds.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (id, nick, n_matches, solo_q_tier, solo_q_division, flex_tier, flex_division))
-        except:
-            print(sum, 'failed.')
+        id = i
+        nick = summoner_instance.nick
+        time.sleep(10)
+
+        ds.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (id, nick, n_matches, solo_q_tier, solo_q_division, flex_tier, flex_division))
+
 
     end_read_time = time.time()
 
