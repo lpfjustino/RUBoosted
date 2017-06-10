@@ -2,14 +2,7 @@ import pandas as pd
 from enum import Enum
 import numpy as np
 import time
-import visualization as v
-
-class Elo(Enum):
-    BRONZE = 0
-    SILVER = 1
-    GOLD = 2
-    PLATINUM = 3
-    DIAMOND = 4
+from summoner import Elo
 
 def elo_to_enum(elo):
     return Elo[elo].value
@@ -38,6 +31,29 @@ def set_elos(placements):
     placements.iloc[:,2] = elos
 
 
+def uniform_elo_sampling(data):
+    samples = []
+    uniform = pd.DataFrame()
+    smallest_pool = float('inf')
+
+    for elo in Elo:
+        is_such_elo = data.loc[:,'solo_q_tier'] == elo.value
+        players = data[is_such_elo]
+        samples.append(players)
+
+        if len(players) < smallest_pool:
+            smallest_pool = len(players)
+
+        # Ignoring masters and challengers
+        if elo.value == Elo['DIAMOND'].value:
+            break
+
+    # smallest_pool = 500
+    for sample in samples:
+        uniform = uniform.append(sample.iloc[:smallest_pool, :])
+
+    return uniform
+
 def rescale(data):
     data[:,:-1] -= np.mean(data[:,:-1], axis=0)
     data[:,:-1] /= np.std(data[:,:-1], axis=0)
@@ -45,28 +61,22 @@ def rescale(data):
     return data
 
 
-def preprocess(my_df):
+def preprocess(my_df, n_labels, features, chosen_features):
     df = my_df.copy()
 
-    features = ['n_matches', 'kda', 'dmg', 'solo_q_tier','solo_q_division','flex_tier','flex_division']
-    chosen_features = ['n_matches', 'kda', 'dmg', 'solo_q_tier']
-
     # Translate elos to numbers
-    placements = df.loc[:, features[-4:]] # The last 4 features are tiers and divisions
+    placements = df.loc[:, features[-n_labels:]] # The last 4 features are tiers and divisions
     set_elos(placements)
-    df.loc[:, features[-4:]] = placements
+    df.loc[:, features[-n_labels:]] = placements
 
-    data_set = df.loc[:, chosen_features].as_matrix()
-    # data_set = rescale(data_set)
+    df = uniform_elo_sampling(df)
 
-    return data_set
+    df = df.loc[:, chosen_features]
 
+    data_set = df.as_matrix()
+    data_set = rescale(data_set)
 
-df = pd.read_csv('_dataset.txt', sep='\t')
-data_set = preprocess(df)
-
-# v.show_3d(data_set)
-v.show_2d(data_set[:,1:])
+    return data_set, df
 
 
 

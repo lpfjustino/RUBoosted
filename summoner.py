@@ -1,6 +1,26 @@
 import stats_fetcher as stf
 import json
 import time
+from enum import Enum
+
+class Elo(Enum):
+    BRONZE = 0
+    SILVER = 1
+    GOLD = 2
+    PLATINUM = 3
+    DIAMOND = 4
+    MASTER = 5
+    CHALLENGER = 5
+
+    def elos_list(limited=False):
+        elos = []
+        for elo in Elo:
+            elos.append(elo.name)
+            if limited:
+                if elo.name == 'DIAMOND':
+                    break
+
+        return elos
 
 class Summoner:
     def __init__(self, nick, cached=False, fill=True):
@@ -41,11 +61,11 @@ class Summoner:
 
     def fill_missing_props(self):
         if hasattr(self, 'ranked_stats') == False:
-            self.ranked_stats = sf.ranked_stats(self.sum_id)
+            self.ranked_stats = stf.ranked_stats(self.sum_id)
         if hasattr(self, 'matches') == False:
-            self.matches = sf.matches(self.acc_id)
+            self.matches = stf.matches(self.acc_id)
         if hasattr(self, 'leagues') == False:
-            self.leagues = sf.leagues(self.sum_id)
+            self.leagues = stf.leagues(self.sum_id)
 
 
 def get_base_summoners():
