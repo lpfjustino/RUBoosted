@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import summoner as s
-import stats_fetcher as sf
+import stats_fetcher as stf
 import ds_builder as dsb
 import sys
 import time
@@ -20,6 +20,7 @@ from sklearn import svm
 from sklearn.model_selection import cross_val_score
 
 
+sf = stf.StatisticsFetcher()
 # Build cache starting from args
 # sf.cache_all_summoners(sys.argv[2])
 
@@ -65,4 +66,4 @@ def benchmark(data_set):
 # benchmark(data_set)
 #
 
-sf.cache_all_matches()
+sf.cache_all_matches(start=2)

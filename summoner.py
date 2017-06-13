@@ -37,10 +37,13 @@ class Summoner:
                 self.matches = matches
                 self.leagues = leagues
 
-            except Exception as e:
-                raise e
+            except stf.SummonerNotExists:
+                raise stf.SummonerNotExists(nick)
         else:
-            self.deserialize_summoner(nick, fill)
+            try:
+                self.deserialize_summoner(nick, fill)
+            except FileNotFoundError:
+                raise stf.SummonerNotCached(nick)
 
 
     def toJSON(self):
@@ -75,18 +78,18 @@ def get_base_summoners():
 
     return summoners
 
-def get_cached_summoners_instances():
-    # Instantiate every summoner name in base from cache
-    base = get_base_summoners()
-    summoner_instances = []
-    for sum in base:
-        try:
-            with open('summoners/'+sum+'.txt', encoding="utf8") as f:
-                summoner_instance = Summoner(sum, cached=True, fill=False)
-                summoner_instances.append(summoner_instance)
-        except:
-            # print(sum, ' is not cached yet.')
-            continue
-
-
-    return summoner_instances
+# def get_cached_summoners_instances():
+#     # Instantiate every summoner name in base from cache
+#     base = get_base_summoners()
+#     summoner_instances = []
+#     for sum in base:
+#         try:
+#             with open('summoners/'+sum+'.txt', encoding="utf8") as f:
+#                 summoner_instance = Summoner(sum, cached=True, fill=False)
+#                 summoner_instances.append(summoner_instance)
+#         except:
+#             # print(sum, ' is not cached yet.')
+#             continue
+#
+#
+#     return summoner_instances

@@ -1,12 +1,7 @@
 import summoner as s
 import time
 import numpy as np
-
-def filter_s8_matches(matches):
-    def is_s8_match(match): return match['season'] == 8
-    season8 = np.array([is_s8_match(match) for match in matches])
-    all_matches = np.array(matches)
-    return all_matches[season8], len(all_matches[season8])
+import stats_fetcher as stf
 
 def tier_division(summoner_instance):
     solo_q_tier = summoner_instance.leagues[0]['tier']
@@ -85,7 +80,7 @@ def dataset_v1(start=0):
         summoner_instance = s.Summoner(sum, cached=True, fill=False)
 
         solo_q_tier, solo_q_division, flex_tier, flex_division = tier_division(summoner_instance)
-        _, n_matches = filter_s8_matches(summoner_instance.matches)
+        _, n_matches = stf.filter_s8_matches(summoner_instance.matches)
         kda, dmg, wr = stats_per_champ(summoner_instance.ranked_stats)
 
         id = start+i
