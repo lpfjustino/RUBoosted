@@ -66,4 +66,5 @@ def benchmark(data_set):
 # benchmark(data_set)
 #
 
-sf.cache_all_matches(start=2)
+# sf.cache_all_matches(start=2)
+sf.cache_all_matches(sys.argv[2])
