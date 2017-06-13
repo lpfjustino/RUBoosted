@@ -99,6 +99,47 @@ class StatisticsFetcher():
         return matches
 
 
+    def get_match(self, match_id):
+        url = "https://br1.api.riotgames.com/lol/match/v3/timelines/by-match/"+str(match_id)+"?api_key="+self.dev_key
+        headers = {
+            "Origin": "https://developer.riotgames.com",
+            "Accept-Charset": "application/x-www-form-urlencoded; charset=UTF-8",
+            "X-Riot-Token": "RGAPI-b3a0e588-5085-43cc-8778-bb2394a4541d",
+            "Accept-Language": "pt-BR,pt;q=0.8,en-US;q=0.6,en;q=0.4",
+            "User-Agent": "Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"
+        }
+
+        r = requests.get(url, headers=headers)
+        print(r)
+        self.responses['matches'] = r
+
+        # If request failed, repeat it
+        if 'matches' not in r.json():
+            raise Exception('matches not in response')
+
+        matches = r.json()['matches']
+        return matches
+
+    def cache_all_matches(self, start=0):
+        summoners = sum.get_base_summoners()
+
+        for i, summoner in enumerate(summoners[start:]):
+            print("Summoner ", start + i, "/", len(summoners), "(" + str((start + i) / len(summoners)) + "%) : ",
+                  summoner)
+
+            try:
+                s = sum.Summoner(summoner)
+            except SummonerNotExists:
+                print('Summoner does not exist. Skipping.')
+                continue
+
+            for j, match in enumerate(s.matches):
+                self.get_match(match['gameId'])
+
+
+        time.sleep(3)
+
+
     def leagues(self, sum_id):
         url = "https://br1.api.riotgames.com/lol/league/v3/leagues/by-summoner/"+str(sum_id)+"?api_key="+self.dev_key
         headers = {
@@ -134,6 +175,7 @@ class StatisticsFetcher():
                 print(e, ". We'll wait a minute before trying again")
                 if self.verbose:
                     self.log_responses()
+
                 time.sleep(60)
                 return self.fetch_all(nick)
 
@@ -144,8 +186,6 @@ class StatisticsFetcher():
             if self.verbose:
                 self.log_responses()
 
-            if self.verbose:
-                self.log_responses()
 
             time.sleep(60)
             return self.fetch_all(nick)
@@ -186,5 +226,8 @@ def cache_summoner(k):
 
     if(s.acc_id is not None):
         s.serialize_summoner()
+
+
+
 
 
