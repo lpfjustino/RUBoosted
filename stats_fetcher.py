@@ -123,7 +123,7 @@ class StatisticsFetcher():
         self.responses['matches_full'] = r
 
         # If request failed, repeat it
-        if 'status' in r.json():
+        if r is not None and'status' in r.json() :
             print('Match not successfully fetched. Trying again soon.')
             time.sleep(10)
             self.get_match(match_id)
@@ -131,12 +131,13 @@ class StatisticsFetcher():
         match = r.json()
         return match
 
-    def cache_all_matches(self, start=0):
+    def cache_all_matches(self, start=0, end=-1):
         summoners = sum.get_base_summoners()
+        if end == -1: end = len(summoners)
 
-        for i, summoner in enumerate(summoners[start:]):
+        for i, summoner in enumerate(summoners[start:end]):
             # Computes de percentage of players completed
-            perc = "%.2f" % ((start + i) / len(summoners))
+            perc = "%.2f" % ((start + i) / (len(summoners)-end))
             print("Summoner ", start + i, "/", len(summoners), "\t(" + perc + "%) : ",
                   summoner)
 
@@ -155,12 +156,11 @@ class StatisticsFetcher():
                 print('Summoner does not exist. Skipping.')
                 continue
 
-
             # For every S8 match that player played
             s8_matches, n_s8_matches = filter_s8_matches(s.matches)
             for j, match in enumerate(s8_matches):
                 perc = "%.2f" % (j*100 / n_s8_matches)
-                print("\tMatch ", j, "/", n_s8_matches, "\t(" + perc + "%) : ", summoner)
+                print("\t(",start+i,")\tMatch ", j, "/", n_s8_matches, "\t(" + perc + "%)")
 
                 # Skips if match is already cached
                 file_name = 'matches/' + str(match['gameId']) + '.txt'
