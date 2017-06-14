@@ -124,14 +124,12 @@ class StatisticsFetcher():
 
         # If request failed, repeat it
         if r is not None and'status' in r.json() :
-            print('Match not successfully fetched. Trying again soon.')
-            time.sleep(10)
-            self.get_match(match_id)
+            raise Exception('\tMatch not successfully fetched. Trying again soon.')
 
         match = r.json()
         return match
 
-    def cache_all_matches(self, start=0, end=-1):
+    def cache_all_matches(self, start, end):
         summoners = sum.get_base_summoners()
         if end == -1: end = len(summoners)
 
@@ -167,7 +165,13 @@ class StatisticsFetcher():
                 if os.path.isfile(file_name) == True:
                     print('\tSkipped')
 
-                match_details = self.get_match(match['gameId'])
+                while True:
+	                try:
+	                	match_details = self.get_match(match['gameId'])
+	                except Exception as e:
+	                	print(e)
+	                	time.sleep(30)
+                	break
 
                 # Write match to matches folder
                 with open(file_name, 'w') as f:
