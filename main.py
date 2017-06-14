@@ -68,4 +68,5 @@ def benchmark(data_set):
 
 # sf.cache_all_matches(start=12)
 
-sf.cache_all_matches(int(sys.argv[2]), int(sys.argv[3]))
+# sf.cache_all_matches(int(sys.argv[2]), int(sys.argv[3]))
+sf.cache_all_matches(6000, 6999)

@@ -150,10 +150,6 @@ class StatisticsFetcher():
                 print('Summoner not cached. Skipping.')
                 continue
 
-            except SummonerNotExists:
-                print('Summoner does not exist. Skipping.')
-                continue
-
             # For every S8 match that player played
             s8_matches, n_s8_matches = filter_s8_matches(s.matches)
             for j, match in enumerate(s8_matches):
@@ -166,18 +162,20 @@ class StatisticsFetcher():
                     print('\tSkipped')
 
                 while True:
-	                try:
-	                	match_details = self.get_match(match['gameId'])
-	                except Exception as e:
-	                	print(e)
-	                	time.sleep(30)
-                	break
+                    try:
+                        match_details = self.get_match(match['gameId'])
 
-                # Write match to matches folder
-                with open(file_name, 'w') as f:
-                    content = json.dumps(match_details, default=lambda o: o.__dict__,
-                                         sort_keys=True, indent=4)
-                    f.write(content)
+                        # Write match to matches folder
+                        f = open(file_name, 'w')
+                        content = json.dumps(match_details, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+                        f.write(content)
+
+                    except Exception as e:
+                        print(e)
+                        time.sleep(30)
+                    break
+
+
 
 
 
