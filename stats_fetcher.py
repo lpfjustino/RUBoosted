@@ -123,7 +123,7 @@ class StatisticsFetcher():
         self.responses['matches_full'] = r
 
         # If request failed, repeat it
-        if r is not None and'status' in r.json() :
+        if r is not None and 'status' in r.json() :
             raise Exception('\tMatch not successfully fetched. Trying again soon.')
 
         match = r.json()
@@ -153,15 +153,16 @@ class StatisticsFetcher():
             # For every S8 match that player played
             s8_matches, n_s8_matches = filter_s8_matches(s.matches)
             for j, match in enumerate(s8_matches):
-                perc = "%.2f" % (j*100 / n_s8_matches)
-                print("\t(",start+i,")\tMatch ", j, "/", n_s8_matches, "\t(" + perc + "%)")
-
                 # Skips if match is already cached
                 file_name = 'matches/' + str(match['gameId']) + '.txt'
                 if os.path.isfile(file_name) == True:
                     print('\tSkipped')
+                    continue
 
                 while True:
+                    perc = "%.2f" % (j * 100 / n_s8_matches)
+                    print("\t(", start + i, ")\tMatch ", j, "/", n_s8_matches, "\t(" + perc + "%)")
+
                     try:
                         match_details = self.get_match(match['gameId'])
 
@@ -169,15 +170,39 @@ class StatisticsFetcher():
                         f = open(file_name, 'w')
                         content = json.dumps(match_details, default=lambda o: o.__dict__, sort_keys=True, indent=4)
                         f.write(content)
+                        break
 
                     except Exception as e:
                         print(e)
                         time.sleep(30)
+
+    def cache_matches(self, list_matches):
+        n_matches = len(list_matches)
+
+        for j, match in enumerate(list_matches):
+            # Skips if match is already cached
+            file_name = 'matches/' + str(match) + '.txt'
+            if os.path.isfile(file_name) == True:
+                print('\tSkipped')
+                continue
+
+            while True:
+                perc = "%.2f" % (j * 100 / n_matches)
+                print("Match ", j, "/", n_matches, "\t(" + perc + "%)")
+
+                try:
+                    match_details = self.get_match(match)
+
+                    # Write match to matches folder
+                    f = open(file_name, 'w')
+                    content = json.dumps(match_details, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+                    f.write(content)
                     break
 
+                except Exception as e:
+                    print(e)
 
-
-
+                    time.sleep(30)
 
 
     def leagues(self, sum_id):
@@ -239,7 +264,7 @@ class StatisticsFetcher():
         for key, value in self.responses.items():
             print('\t',key, value)
 
-    def cache_all_summoners(start=0):
+    def cache_all_summoners(self, start=0):
         summoners = sum.get_base_summoners()
 
         for i, summoner in enumerate(summoners[start:]):
@@ -252,11 +277,15 @@ class StatisticsFetcher():
                 s = sum.Summoner(summoner)
             except SummonerNotExists:
                 print('Summoner does not exist. Skipping.')
+
+                if self.verbose == True:
+                    self.log_responses()
+
                 continue
             if(s.acc_id is not None):
                 s.serialize_summoner()
 
-    def cache_summoner(k):
+    def cache_summoner(self, k):
         summoners = sum.get_base_summoners()
 
         summoner = summoners[k]
