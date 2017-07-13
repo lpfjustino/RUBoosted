@@ -1,7 +1,10 @@
 import summoner as s
 import time
 import numpy as np
-import stats_fetcher as stf
+from stats_fetcher import filter_s8_matches
+import db_manager as dbm
+
+from db_manager import db
 
 def tier_division(summoner_instance):
     solo_q_tier = summoner_instance.leagues[0]['tier']
@@ -59,7 +62,7 @@ def stats_per_champ(ranked_stats):
     return avg_kda, avg_dmg, avg_wr
 
 def dataset_v1(start=0):
-    base = s.get_base_summoners()
+    base = dbm.get_base_summoners()
     print('Building begun')
     start_read_time = time.time()
 
@@ -80,7 +83,7 @@ def dataset_v1(start=0):
         summoner_instance = s.Summoner(sum, cached=True, fill=False)
 
         solo_q_tier, solo_q_division, flex_tier, flex_division = tier_division(summoner_instance)
-        _, n_matches = stf.filter_s8_matches(summoner_instance.matches)
+        _, n_matches = filter_s8_matches(summoner_instance.matches)
         kda, dmg, wr = stats_per_champ(summoner_instance.ranked_stats)
 
         id = start+i
@@ -93,3 +96,8 @@ def dataset_v1(start=0):
 
     print('==================')
     print('Read total time: ', end_read_time-start_read_time)
+
+def dataset_v2():
+    pass
+
+dataset_v1()

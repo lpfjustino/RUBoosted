@@ -5,6 +5,7 @@ import summoner as sum
 import json
 import os.path
 import sys
+import db_manager as dbm
 
 class SummonerNotExists(Exception):
      def __init__(self, sum):
@@ -130,7 +131,7 @@ class StatisticsFetcher():
         return match
 
     def cache_all_matches(self, start, end):
-        summoners = sum.get_base_summoners()
+        summoners = dbm.get_base_summoners()
         if end == -1: end = len(summoners)
 
         for i, summoner in enumerate(summoners[start:end]):
@@ -180,29 +181,35 @@ class StatisticsFetcher():
         n_matches = len(list_matches)
 
         for j, match in enumerate(list_matches):
-            # Skips if match is already cached
+            perc = "%.2f" % (j * 100 / n_matches)
+            print("Match ", j, "/", n_matches, "\t(" + perc + "%)")
+
             file_name = 'matches/' + str(match) + '.txt'
+            # Skips if match is already cached
             if os.path.isfile(file_name) == True:
                 print('\tSkipped')
                 continue
 
-            while True:
-                perc = "%.2f" % (j * 100 / n_matches)
-                print("Match ", j, "/", n_matches, "\t(" + perc + "%)")
+            self.cache_match(match)
 
-                try:
-                    match_details = self.get_match(match)
 
-                    # Write match to matches folder
-                    f = open(file_name, 'w')
-                    content = json.dumps(match_details, default=lambda o: o.__dict__, sort_keys=True, indent=4)
-                    f.write(content)
-                    break
+    def cache_match(self, match):
+        file_name = 'matches/' + str(match) + '.txt'
 
-                except Exception as e:
-                    print(e)
+        while True:
+            try:
+                match_details = self.get_match(match)
 
-                    time.sleep(30)
+                # Write match to matches folder
+                f = open(file_name, 'w')
+                content = json.dumps(match_details, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+                f.write(content)
+                break
+
+            except Exception as e:
+                print(e)
+
+                time.sleep(30)
 
 
     def leagues(self, sum_id):
@@ -265,7 +272,7 @@ class StatisticsFetcher():
             print('\t',key, value)
 
     def cache_all_summoners(self, start=0):
-        summoners = sum.get_base_summoners()
+        summoners = dbm.get_base_summoners()
 
         for i, summoner in enumerate(summoners[start:]):
             # Computes de percentage of players completed
@@ -286,7 +293,7 @@ class StatisticsFetcher():
                 s.serialize_summoner()
 
     def cache_summoner(self, k):
-        summoners = sum.get_base_summoners()
+        summoners = dbm.get_base_summoners()
 
         summoner = summoners[k]
         print("Summoner ", k, ": ", summoner)

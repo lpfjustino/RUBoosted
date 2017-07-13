@@ -70,26 +70,3 @@ class Summoner:
         if hasattr(self, 'leagues') == False:
             self.leagues = stf.leagues(self.sum_id)
 
-
-def get_base_summoners():
-    with open('base.txt', encoding="utf8") as f:
-        content = f.readlines()[0]
-        summoners = str.split(content, ',')
-
-    return summoners
-
-# def get_cached_summoners_instances():
-#     # Instantiate every summoner name in base from cache
-#     base = get_base_summoners()
-#     summoner_instances = []
-#     for sum in base:
-#         try:
-#             with open('summoners/'+sum+'.txt', encoding="utf8") as f:
-#                 summoner_instance = Summoner(sum, cached=True, fill=False)
-#                 summoner_instances.append(summoner_instance)
-#         except:
-#             # print(sum, ' is not cached yet.')
-#             continue
-#
-#
-#     return summoner_instances
