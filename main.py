@@ -50,18 +50,18 @@ def benchmark(data_set):
     print('SVM: ', scores2)
     print('KNN: ', scores3)
 
-# df = pd.read_csv('dataset2.txt', sep='\t')
-# features = list(df)
-# chosen = np.array(['n_matches', 'kda', 'win_rate', 'dmg', 'solo_q_tier'])
-# visualize(df, chosen)
-#
-# data_set, df = pp.preprocess(df, 4, features, chosen)
-# benchmark(data_set)
+df = pd.read_csv('dataset2.txt', sep='\t')
+features = list(df)
+chosen = np.array(['n_matches', 'kda', 'win_rate', 'dmg', 'solo_q_tier'])
+
+data_set, df = pp.preprocess(df, 4, features, chosen)
+visualize(df, chosen)
+benchmark(data_set)
 #
 
 
 # Initializing statistics fetcher
-sf = stf.StatisticsFetcher(verbose=True)
+# sf = stf.StatisticsFetcher(verbose=True)
 
 # Build cache with limits set by args
 # sf.cache_all_matches(int(sys.argv[2]), int(sys.argv[3]))

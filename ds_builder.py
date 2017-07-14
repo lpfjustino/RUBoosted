@@ -62,34 +62,35 @@ def stats_per_champ(ranked_stats):
     return avg_kda, avg_dmg, avg_wr
 
 def dataset_v1(start=0):
-    base = dbm.get_base_summoners()
     print('Building begun')
     start_read_time = time.time()
 
+    # Write header
     if start == 0:
         ds = open('dataset2.txt', "w", encoding="utf8")
         ds.write('id\tnick\tn_matches\tkda\tdmg\twin_rate\tsolo_q_tier\tsolo_q_division\tflex_tier\tflex_division\n')
     else:
         ds = open('dataset2.txt', "a", encoding="utf8")
 
-    for i, sum in enumerate(base[start:]):
-        try:
-            f = open('summoners/' + sum + '.txt', encoding="utf8")
-        except Exception as e:
-            print(sum, 'failed.', e)
-            continue
+    done = False
+    current = 0
+    pool = 1000
+    while not done:
+        players, done = dbm.get_chunk(current,pool)
+        current += pool
 
-        print(start+i, sum)
-        summoner_instance = s.Summoner(sum, cached=True, fill=False)
+        for i, sum in enumerate(players):
+            print("\t\t",start+i, sum['nick'])
+            summoner_instance = s.Summoner(sum['nick'], cached=True, fill=False, instance=sum)
 
-        solo_q_tier, solo_q_division, flex_tier, flex_division = tier_division(summoner_instance)
-        _, n_matches = filter_s8_matches(summoner_instance.matches)
-        kda, dmg, wr = stats_per_champ(summoner_instance.ranked_stats)
+            solo_q_tier, solo_q_division, flex_tier, flex_division = tier_division(summoner_instance)
+            _, n_matches = filter_s8_matches(summoner_instance.matches)
+            kda, dmg, wr = stats_per_champ(summoner_instance.ranked_stats)
 
-        id = start+i
-        nick = summoner_instance.nick
+            id = start+i
+            nick = summoner_instance.nick
 
-        ds.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (id, nick, n_matches, kda, dmg, wr, solo_q_tier, solo_q_division, flex_tier, flex_division))
+            ds.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (id, nick, n_matches, kda, dmg, wr, solo_q_tier, solo_q_division, flex_tier, flex_division))
 
 
     end_read_time = time.time()

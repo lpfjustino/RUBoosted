@@ -131,7 +131,7 @@ class StatisticsFetcher():
         return match
 
     def cache_all_matches(self, start, end):
-        summoners = dbm.get_base_summoners()
+        summoners = dbm.all_summoner_nicks()
         if end == -1: end = len(summoners)
 
         for i, summoner in enumerate(summoners[start:end]):
@@ -272,7 +272,7 @@ class StatisticsFetcher():
             print('\t',key, value)
 
     def cache_all_summoners(self, start=0):
-        summoners = dbm.get_base_summoners()
+        summoners = dbm.all_summoner_nicks()
 
         for i, summoner in enumerate(summoners[start:]):
             # Computes de percentage of players completed
@@ -293,7 +293,7 @@ class StatisticsFetcher():
                 s.serialize_summoner()
 
     def cache_summoner(self, k):
-        summoners = dbm.get_base_summoners()
+        summoners = dbm.all_summoner_nicks()
 
         summoner = summoners[k]
         print("Summoner ", k, ": ", summoner)
