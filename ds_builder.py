@@ -63,7 +63,6 @@ def stats_per_champ(ranked_stats):
 
 def dataset_v1(start=0):
     print('Building begun')
-    start_read_time = time.time()
 
     # Write header
     if start == 0:
@@ -76,11 +75,17 @@ def dataset_v1(start=0):
     current = 0
     pool = 1000
     while not done:
+        print("\tChunk", int(current / pool) + 1)
+        start_read_time = time.time()
         players, done = dbm.get_chunk(current,pool)
         current += pool
 
+        end_read_time = time.time()
+        print('==================')
+        print('Read total time: ', end_read_time-start_read_time)
+
         for i, sum in enumerate(players):
-            print("\t\t",start+i, sum['nick'])
+            # print("\t\t",start+i, sum['nick'])
             summoner_instance = s.Summoner(sum['nick'], cached=True, fill=False, instance=sum)
 
             solo_q_tier, solo_q_division, flex_tier, flex_division = tier_division(summoner_instance)
@@ -92,13 +97,11 @@ def dataset_v1(start=0):
 
             ds.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (id, nick, n_matches, kda, dmg, wr, solo_q_tier, solo_q_division, flex_tier, flex_division))
 
+        players.close()
 
-    end_read_time = time.time()
 
-    print('==================')
-    print('Read total time: ', end_read_time-start_read_time)
 
 def dataset_v2():
     pass
 
-dataset_v1()
+# dataset_v1()

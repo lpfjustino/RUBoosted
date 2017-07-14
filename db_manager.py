@@ -15,19 +15,14 @@ def all_summoner_nicks():
     return sums
 
 def get_chunk(skip, limit):
-    print("\tChunk", int(skip/limit)+1)
-
     pipeline = [
         { "$project": {"_id":0, "leagues":1, "matches":1, "nick":1, "ranked_stats":1,"sum_id":1 } },
         { "$skip": skip },
         { "$limit": limit }
     ]
-    query = db['summoners'].aggregate(pipeline)
+    query = db['summoners'].aggregate(pipeline).explain
 
-    print("\tDone")
-
-    query = list(query)
-    done = len(query) == 0
+    done = len(list(query)) == 0
 
     return query, done
 

@@ -46,17 +46,48 @@ def benchmark(data_set):
     knn.fit(X, y)
     scores3 = cross_val_score(knn, X, y, cv=5)
 
-    print('MLP:', scores)
+    print('MLP/:', scores)
     print('SVM: ', scores2)
     print('KNN: ', scores3)
 
-df = pd.read_csv('dataset2.txt', sep='\t')
+def benchmark_SVM(data_set):
+    X = data_set[:, :-1]
+    y = data_set[:, -1]
+
+    for i in range(5):
+        clf = svm.SVC(kernel='linear', C=1, degree=i, tol=1e-3, verbose=False, decision_function_shape='ovr')
+        clf.fit(X, y)
+        scores = cross_val_score(clf, X, y, cv=10)
+
+        print(i, scores)
+
+    clf = svm.SVC(kernel='poly', C=1, tol=1e-3, probability=True, decision_function_shape='ovr')
+    clf.fit(X, y)
+    scores = cross_val_score(clf, X, y, cv=10)
+
+    print(scores)
+
+    clf = svm.SVC(kernel='sigmoid', C=1, tol=1e-3, probability=True, decision_function_shape='ovr')
+    clf.fit(X, y)
+    scores = cross_val_score(clf, X, y, cv=10)
+
+    print(scores)
+
+    clf = svm.SVC(kernel='rbf', C=1, tol=1e-3, probability=True, decision_function_shape='ovr')
+    clf.fit(X, y)
+    scores = cross_val_score(clf, X, y, cv=10)
+
+    print(scores)
+
+
+df = pd.read_csv('_dataset2.txt', sep='\t')
 features = list(df)
 chosen = np.array(['n_matches', 'kda', 'win_rate', 'dmg', 'solo_q_tier'])
 
 data_set, df = pp.preprocess(df, 4, features, chosen)
-visualize(df, chosen)
-benchmark(data_set)
+# visualize(df, chosen)
+# benchmark(data_set)
+# benchmark_SVM(data_set)
 #
 
 
