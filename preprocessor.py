@@ -69,7 +69,7 @@ def preprocess(my_df, n_labels, features, chosen_features):
     set_elos(placements)
     df.loc[:, features[-n_labels:]] = placements
 
-    # df = uniform_elo_sampling(df)
+    df = uniform_elo_sampling(df)
 
     df = df.loc[:, chosen_features]
 

@@ -76,8 +76,12 @@ def dataset_v1(start=0):
     pool = 1000
     while not done:
         print("\tChunk", int(current / pool) + 1)
+
+        if((current / pool) + 1)==3: break
+
         start_read_time = time.time()
         players, done = dbm.get_chunk(current,pool)
+
         current += pool
 
         end_read_time = time.time()
@@ -94,14 +98,15 @@ def dataset_v1(start=0):
 
             id = start+i
             nick = summoner_instance.nick
-
+            print(nick)
+            print(id, nick, n_matches, kda, dmg, wr, solo_q_tier, solo_q_division, flex_tier, flex_division)
             ds.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (id, nick, n_matches, kda, dmg, wr, solo_q_tier, solo_q_division, flex_tier, flex_division))
 
-        players.close()
+        # players.close()
 
 
 
 def dataset_v2():
     pass
 
-# dataset_v1()
+dataset_v1()

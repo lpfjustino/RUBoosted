@@ -73,11 +73,13 @@ def benchmark_SVM(data_set):
 
     print(scores)
 
-    clf = svm.SVC(kernel='rbf', C=1, tol=1e-3, probability=True, decision_function_shape='ovr')
-    clf.fit(X, y)
-    scores = cross_val_score(clf, X, y, cv=10)
+    Cs = np.linspace(1e-2, 1, num=20)
+    for c in Cs:
+        clf = svm.SVC(kernel='rbf', C=c, tol=1e-3, probability=True, decision_function_shape='ovr')
+        clf.fit(X, y)
+        scores = cross_val_score(clf, X, y, cv=10)
+        print(c, max(scores))
 
-    print(scores)
 
 
 df = pd.read_csv('_dataset2.txt', sep='\t')
@@ -87,7 +89,7 @@ chosen = np.array(['n_matches', 'kda', 'win_rate', 'dmg', 'solo_q_tier'])
 data_set, df = pp.preprocess(df, 4, features, chosen)
 # visualize(df, chosen)
 # benchmark(data_set)
-# benchmark_SVM(data_set)
+benchmark_SVM(data_set)
 #
 
 
