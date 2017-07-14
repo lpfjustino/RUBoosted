@@ -67,17 +67,15 @@ def dataset_v1(start=0):
     # Write header
     if start == 0:
         ds = open('dataset2.txt', "w", encoding="utf8")
-        ds.write('id\tnick\tn_matches\tkda\tdmg\twin_rate\tsolo_q_tier\tsolo_q_division\tflex_tier\tflex_division\n')
+        ds.write('nick\tn_matches\tkda\tdmg\twin_rate\tsolo_q_tier\tsolo_q_division\tflex_tier\tflex_division\n')
     else:
         ds = open('dataset2.txt', "a", encoding="utf8")
 
     done = False
     current = 0
-    pool = 1000
+    pool = 500
     while not done:
         print("\tChunk", int(current / pool) + 1)
-
-        if((current / pool) + 1)==3: break
 
         start_read_time = time.time()
         players, done = dbm.get_chunk(current,pool)
@@ -90,23 +88,22 @@ def dataset_v1(start=0):
 
         for i, sum in enumerate(players):
             # print("\t\t",start+i, sum['nick'])
-            summoner_instance = s.Summoner(sum['nick'], cached=True, fill=False, instance=sum)
+            try:
+                summoner_instance = s.Summoner(sum['nick'], cached=True, fill=False, instance=sum)
 
-            solo_q_tier, solo_q_division, flex_tier, flex_division = tier_division(summoner_instance)
-            _, n_matches = filter_s8_matches(summoner_instance.matches)
-            kda, dmg, wr = stats_per_champ(summoner_instance.ranked_stats)
+                solo_q_tier, solo_q_division, flex_tier, flex_division = tier_division(summoner_instance)
+                _, n_matches = filter_s8_matches(summoner_instance.matches)
+                kda, dmg, wr = stats_per_champ(summoner_instance.ranked_stats)
 
-            id = start+i
-            nick = summoner_instance.nick
-            print(nick)
-            print(id, nick, n_matches, kda, dmg, wr, solo_q_tier, solo_q_division, flex_tier, flex_division)
-            ds.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (id, nick, n_matches, kda, dmg, wr, solo_q_tier, solo_q_division, flex_tier, flex_division))
+                nick = summoner_instance.nick
+                ds.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (nick, n_matches, kda, dmg, wr, solo_q_tier, solo_q_division, flex_tier, flex_division))
 
-        # players.close()
+            except Exception as e:
+                print(sum['nick'], 'failed.', e)
 
 
 
 def dataset_v2():
     pass
 
-dataset_v1()
+# dataset_v1()

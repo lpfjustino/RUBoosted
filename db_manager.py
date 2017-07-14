@@ -20,8 +20,9 @@ def get_chunk(skip, limit):
         { "$skip": skip },
         { "$limit": limit }
     ]
-    query = db['summoners'].aggregate(pipeline)
-    query = list(query)
+    cursor = db['summoners'].aggregate(pipeline)
+    query = list(cursor)
+    cursor.close()
 
     done = len(query) == 0
 

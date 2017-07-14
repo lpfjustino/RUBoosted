@@ -52,7 +52,7 @@ def uniform_elo_sampling(data):
     for sample in samples:
         uniform = uniform.append(sample.iloc[:smallest_pool, :])
 
-    return uniform
+    return uniform, smallest_pool
 
 def rescale(data):
     data[:,:-1] -= np.mean(data[:,:-1], axis=0)
@@ -69,7 +69,7 @@ def preprocess(my_df, n_labels, features, chosen_features):
     set_elos(placements)
     df.loc[:, features[-n_labels:]] = placements
 
-    df = uniform_elo_sampling(df)
+    df, n = uniform_elo_sampling(df)
 
     df = df.loc[:, chosen_features]
 
