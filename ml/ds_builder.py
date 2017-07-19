@@ -83,15 +83,9 @@ def dataset_v1(start=0):
         ds = open('dataset2.txt', "a", encoding="utf8")
 
     done = False
-    current = 0
-    pool = 6000
-    # while not done:
-    #     print("\tChunk", int(current / pool) + 1)
 
     start_read_time = time.time()
-    players, done = dbm.get_chunk(current,pool)
-
-    # current += pool
+    players, done = dbm.get_players()
 
     end_read_time = time.time()
     print('==================')
@@ -103,7 +97,6 @@ def dataset_v1(start=0):
             summoner_instance = s.Summoner(sum['nick'], cached=True, instance=sum)
 
             solo_q_tier, solo_q_division, flex_tier, flex_division = tier_division(summoner_instance)
-            # _, n_matches = filter_s8_matches(summoner_instance.matches)
             n_matches = get_n_matches(summoner_instance)
 
             kda, dmg, wr = stats_per_champ(summoner_instance.ranked_stats)

@@ -17,9 +17,8 @@ def all_summoner_nicks():
 
     return sums
 
-def get_chunk(skip, limit):
-    pipeline = summoners_pipeline(skip, limit)
-    cursor = db['summoners'].aggregate(pipeline, allowDiskUse=True)
+def get_players():
+    cursor = db['summoners'].aggregate(summoners_pipeline, allowDiskUse=True)
     query = list(cursor)
     cursor.close()
 

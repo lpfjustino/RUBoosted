@@ -1,5 +1,4 @@
-def summoners_pipeline(skip, limit):
-    return [
+summoners_pipeline = [
         #{"$skip": skip},
         #{"$limit": limit},
 
