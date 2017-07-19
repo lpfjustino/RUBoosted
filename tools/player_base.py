@@ -1,7 +1,6 @@
 import numpy as np
 
-import stats_fetcher
-from summoner import Summoner
+from db.summoner import Summoner
 
 def fetch_all(summoners_list):
     base = []

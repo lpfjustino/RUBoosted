@@ -1,9 +1,8 @@
-from mpl_toolkits.mplot3d import Axes3D
 import matplotlib
 import matplotlib.pyplot as plt
-import numpy as np
-import pylab
-from summoner import Elo
+
+from db.summoner import Elo
+
 
 def show_3d(data):
     fig = plt.figure()

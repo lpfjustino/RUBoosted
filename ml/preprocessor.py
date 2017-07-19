@@ -1,8 +1,8 @@
-import pandas as pd
-from enum import Enum
 import numpy as np
-import time
-from summoner import Elo
+import pandas as pd
+
+from db.summoner import Elo
+
 
 def elo_to_enum(elo):
     return Elo[elo].value

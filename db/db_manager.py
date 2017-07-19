@@ -1,5 +1,8 @@
-from pymongo import MongoClient
 import json
+
+from pymongo import MongoClient
+
+from db.queries import *
 
 client = MongoClient()
 db = client['RUBoosted']
@@ -15,16 +18,14 @@ def all_summoner_nicks():
     return sums
 
 def get_chunk(skip, limit):
-    pipeline = [
-        { "$project": {"_id":0, "leagues":1, "matches":1, "nick":1, "ranked_stats":1,"sum_id":1 } },
-        { "$skip": skip },
-        { "$limit": limit }
-    ]
-    cursor = db['summoners'].aggregate(pipeline)
+    pipeline = summoners_pipeline(skip, limit)
+    cursor = db['summoners'].aggregate(pipeline, allowDiskUse=True)
     query = list(cursor)
     cursor.close()
 
     done = len(query) == 0
+
+    print(len(query))
 
     return query, done
 

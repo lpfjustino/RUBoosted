@@ -1,11 +1,14 @@
-import numpy as np
-import time
-import requests
-import summoner as sum
 import json
 import os.path
 import sys
-import db_manager as dbm
+import time
+
+import numpy as np
+import requests
+
+from db import db_manager as dbm
+from db import summoner as sum
+
 
 class SummonerNotExists(Exception):
      def __init__(self, sum):

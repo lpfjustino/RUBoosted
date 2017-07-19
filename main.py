@@ -1,23 +1,12 @@
-import urllib3
-import requests
-import pandas as pd
-import player_base as pb
 import numpy as np
-import matplotlib.pyplot as plt
-
-import summoner as s
-import stats_fetcher as stf
-import ds_builder as dsb
-import sys
-import time
-import preprocessor as pp
-import visualization as v
-
-from sklearn.neural_network import MLPClassifier
-from sklearn.neighbors import KNeighborsClassifier
+import pandas as pd
 from sklearn import svm
-
 from sklearn.model_selection import cross_val_score
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.neural_network import MLPClassifier
+
+from ml import preprocessor as pp
+from tools import visualization as v
 
 
 # Build dataset from cache starting from index
