@@ -3,6 +3,8 @@ import pandas as pd
 
 from db.summoner import Elo
 
+from sklearn import preprocessing
+
 
 def elo_to_enum(elo):
     return Elo[elo].value
@@ -58,8 +60,12 @@ def uniform_elo_sampling(data):
     return uniform, smallest_pool
 
 def rescale(data):
-    data[:,:-1] -= np.mean(data[:,:-1], axis=0)
-    data[:,:-1] /= np.std(data[:,:-1], axis=0)
+    data -= np.mean(data, axis=0)
+    data /= np.std(data, axis=0)
+
+    print(data.mean(axis=0))
+    print(data.std(axis=0))
+    dsa
 
     return data
 
@@ -76,8 +82,13 @@ def preprocess(my_df, n_labels, features, chosen_features):
 
     df = df.loc[:, chosen_features]
 
-    data_set = df.as_matrix()
-    data_set = rescale(data_set)
+    data_set = df.as_matrix().astype(float)
+    # data_set = rescale(data_set)
+    # print(data_set)
+    rescaled_data_set = preprocessing.scale(data_set[:,:-1])
+
+    # Concatenates the classes column and the rescaled dataset
+    data_set = np.column_stack((rescaled_data_set, data_set[:,-1:]))
 
     return data_set, df
 
