@@ -71,9 +71,10 @@ def benchmark_SVM(data_set):
 
 
 
-df = pd.read_csv('_dataset2.txt', sep='\t')
+df = pd.read_csv('ml/dataset2.txt', sep='\t', index_col=False)
 features = list(df)
-chosen = np.array(['n_matches', 'kda', 'win_rate', 'dmg', 'solo_q_tier'])
+chosen = np.array(['n_matches', 'kda', 'dmg', 'win_rate', 'var_kda', 'var_dmg', 'var_wr', 'kurt_kda', 'kurt_dmg', 'kurt_wr',
+                   'skew_kda', 'skew_dmg', 'skew_wr', 'solo_q_tier'])
 
 data_set, df = pp.preprocess(df, 4, features, chosen)
 # visualize(df, chosen)

@@ -4,39 +4,15 @@ import numpy as np
 
 from db import db_manager as dbm
 from db import summoner as s
-from tools.stats_fetcher import filter_s8_matches
-
-
-# def tier_division(summoner_instance):
-#     solo_q_tier = summoner_instance.leagues[0]['tier']
-#     solo_q = summoner_instance.leagues[0]['entries']
-#     solo_q_division = [player for player in solo_q if player['playerOrTeamName'] == summoner_instance.nick][0]['rank']
-#
-#     flex_tier = ""
-#     flex_division = ""
-#
-#     # Player plays solo queue and flex
-#     plays_two_queues = len(summoner_instance.leagues) > 1
-#     if plays_two_queues:
-#         flex_tier = summoner_instance.leagues[1]['tier']
-#         flex = summoner_instance.leagues[1]['entries']
-#         flex_division = [player for player in flex if player['playerOrTeamName'] == summoner_instance.nick][0]['rank']
-#
-#     # Player only plays flex
-#     if not plays_two_queues and summoner_instance.leagues[0]['queue'] == "RANKED_FLEX_SR":
-#         flex_tier = solo_q_tier
-#         flex_division = solo_q_division
-#         solo_q_tier = ""
-#         solo_q_division = ""
-#
-#     return solo_q_tier, solo_q_division, flex_tier, flex_division
 
 def tier_division(summoner_instance):
-    # return summoner_instance['solo_q_tier'], summoner_instance['solo_q_division'],\
-    #        summoner_instance['flex_tier'], summoner_instance['flex_division']
+    placements = [summoner_instance.soloq_tier, summoner_instance.soloq_division, \
+           summoner_instance.flex_tier, summoner_instance.flex_division]
 
-    return summoner_instance.soloq_tier, summoner_instance.soloq_division, \
-           summoner_instance.flex_tier, summoner_instance.flex_division
+    for placement in placements:
+        placement.replace("None","")
+
+    return placements
 
 def stats_per_champ(ranked_stats):
     kdas = []
@@ -67,10 +43,26 @@ def stats_per_champ(ranked_stats):
     avg_kda = np.average(kdas, weights=weights)
     avg_dmg = np.average(dmgs, weights=weights)
     avg_wr = np.average(win_rates, weights=weights)
-    return avg_kda, avg_dmg, avg_wr
+
+    var_kda = np.average((kdas - avg_kda) ** 2, weights=weights)
+    var_dmg = np.average((dmgs - avg_dmg) ** 2, weights=weights)
+    var_wr = np.average((win_rates - avg_wr) ** 2, weights=weights)
+
+    kurt_kda = np.average((kdas - avg_kda) ** 3, weights=weights)
+    kurt_dmg = np.average((dmgs - avg_dmg) ** 3, weights=weights)
+    kurt_wr = np.average((win_rates - avg_wr) ** 3, weights=weights)
+
+    skew_kda = np.average((kdas - avg_kda) ** 4, weights=weights)
+    skew_dmg = np.average((dmgs - avg_dmg) ** 4, weights=weights)
+    skew_wr = np.average((win_rates - avg_wr) ** 4, weights=weights)
+
+    stats = [avg_kda, avg_dmg, avg_wr, var_kda, var_dmg, var_wr,
+             kurt_kda, kurt_dmg, kurt_wr, skew_kda, skew_dmg, skew_wr]
+
+    return stats
 
 def get_n_matches(summoner_instance):
-    return len(summoner_instance.matches)
+    return [len(summoner_instance.matches)]
 
 def dataset_v1(start=0):
     print('Building begun')
@@ -78,7 +70,9 @@ def dataset_v1(start=0):
     # Write header
     if start == 0:
         ds = open('dataset2.txt', "w", encoding="utf8")
-        ds.write('nick\tn_matches\tkda\tdmg\twin_rate\tsolo_q_tier\tsolo_q_division\tflex_tier\tflex_division\n')
+        ds.write('nick\tn_matches\tkda\tdmg\twin_rate\tvar_kda\tvar_dmg\tvar_wr\tkurt_kda\tkurt_dmg\tkurt_wr\t'+
+                 'skew_kda\tskew_dmg\tskew_wr\tsolo_q_tier\tsolo_q_division\tflex_tier\tflex_division\n')
+
     else:
         ds = open('dataset2.txt', "a", encoding="utf8")
 
@@ -95,14 +89,26 @@ def dataset_v1(start=0):
         # print("\t\t",start+i, sum['nick'])
         try:
             summoner_instance = s.Summoner(sum['nick'], cached=True, instance=sum)
+            example = []
 
-            solo_q_tier, solo_q_division, flex_tier, flex_division = tier_division(summoner_instance)
-            n_matches = get_n_matches(summoner_instance)
+            # nick
+            example += [summoner_instance.nick]
 
-            kda, dmg, wr = stats_per_champ(summoner_instance.ranked_stats)
+            # n_matches
+            example += get_n_matches(summoner_instance)
 
-            nick = summoner_instance.nick
-            ds.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (nick, n_matches, kda, dmg, wr, solo_q_tier, solo_q_division, flex_tier, flex_division))
+            # avg_kda, avg_dmg, avg_wr, var_kda, var_dmg, var_wr,
+            # kurt_kda, kurt_dmg, kurt_wr, skew_kda, skew_dmg, skew_wr
+            example += stats_per_champ(summoner_instance.ranked_stats)
+
+            # solo_q_tier, solo_q_division, flex_tier, flex_division
+            example += tier_division(summoner_instance)
+
+            for feature in example:
+                ds.write("%s\t" % feature)
+
+            ds.write("\n")
+
 
         except Exception as e:
             print(sum['nick'], 'failed.', e)
@@ -111,4 +117,4 @@ def dataset_v1(start=0):
 def dataset_v2():
     pass
 
-dataset_v1()
+# dataset_v1()

@@ -22,8 +22,11 @@ def fill_queues(placements):
         placements.iloc[i, 2] =  placements.iloc[i,0]
         placements.iloc[i, 3] =  placements.iloc[i,1]
 
+
 def set_elos(placements):
     fill_queues(placements)
+
+    # print(placements)
 
     elos = placements.iloc[:,0].apply(elo_to_enum)
     placements.iloc[:,0] = elos
