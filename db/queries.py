@@ -1,6 +1,6 @@
 summoners_pipeline = [
         #{"$skip": skip},
-        #{"$limit": limit},
+        {"$limit": 1},
 
         # Gathers elos
         { '$unwind': '$leagues'},

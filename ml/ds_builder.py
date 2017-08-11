@@ -1,5 +1,5 @@
 import time
-
+import json
 import numpy as np
 
 from db import db_manager as dbm
@@ -15,18 +15,36 @@ def tier_division(summoner_instance):
     return placements
 
 def stats_per_champ(ranked_stats):
+    roles = json.loads(open('roles.txt', 'r').read())
+    all_roles = np.unique([role['role'] for role in roles])
     kdas = []
     dmgs = []
     win_rates = []
     weights = []
 
+    stats_per_role = dict((role,[]) for role in all_roles)
+    kdas = dict((role,[]) for role in all_roles)
+    dmgs = dict((role,[]) for role in all_roles)
+    win_rates = dict((role,[]) for role in all_roles)
+    weights = dict((role,[]) for role in all_roles)
+
     for champ in ranked_stats:
+        # Skips the anomalous id 0 champion
+        if champ['id'] == 0:
+            continue
+
         kills = champ['stats']['totalChampionKills']
         deaths = champ['stats']['totalDeathsPerSession']
         assists = champ['stats']['totalAssists']
         dmg = champ['stats']['totalDamageDealt']
         wins = champ['stats']['totalSessionsWon']
         games_played = champ['stats']['totalSessionsPlayed']
+
+        # Find champion's role
+        role = ""
+        for r in roles:
+            if int(r['key']) == champ['id']:
+                role = r['role']
 
         if deaths == 0:
             kda = (kills + assists)
@@ -35,10 +53,17 @@ def stats_per_champ(ranked_stats):
 
         win_rate = wins / games_played
 
-        weights.append(games_played)
-        kdas.append(kda)
-        dmgs.append(dmg)
-        win_rates.append(win_rate)
+        weights[role].append(games_played)
+        kdas[role].append(kda)
+        dmgs[role].append(dmg)
+        win_rates[role].append(win_rate)
+
+    print(weights)
+    print(kdas)
+    print(dmgs)
+    print(win_rates)
+
+    dsa
 
     avg_kda = np.average(kdas, weights=weights)
     avg_dmg = np.average(dmgs, weights=weights)
@@ -74,12 +99,11 @@ def dataset_v1(start=0):
                  'skew_kda\tskew_dmg\tskew_wr\tsolo_q_tier\tsolo_q_division\tflex_tier\tflex_division\n')
 
     else:
-        ds = open('dataset2.txt', "a", encoding="utf8")
+        ds = open('_dataset2.txt', "a", encoding="utf8")
 
-    done = False
 
     start_read_time = time.time()
-    players, done = dbm.get_players()
+    players = dbm.get_players()
 
     end_read_time = time.time()
     print('==================')
@@ -87,34 +111,34 @@ def dataset_v1(start=0):
 
     for i, sum in enumerate(players):
         # print("\t\t",start+i, sum['nick'])
-        try:
-            summoner_instance = s.Summoner(sum['nick'], cached=True, instance=sum)
-            example = []
+        # try:
+        summoner_instance = s.Summoner(sum['nick'], cached=True, instance=sum)
+        example = []
 
-            # nick
-            example += [summoner_instance.nick]
+        # nick
+        example += [summoner_instance.nick]
 
-            # n_matches
-            example += get_n_matches(summoner_instance)
+        # n_matches
+        example += get_n_matches(summoner_instance)
 
-            # avg_kda, avg_dmg, avg_wr, var_kda, var_dmg, var_wr,
-            # kurt_kda, kurt_dmg, kurt_wr, skew_kda, skew_dmg, skew_wr
-            example += stats_per_champ(summoner_instance.ranked_stats)
+        # avg_kda, avg_dmg, avg_wr, var_kda, var_dmg, var_wr,
+        # kurt_kda, kurt_dmg, kurt_wr, skew_kda, skew_dmg, skew_wr
+        example += stats_per_champ(summoner_instance.ranked_stats)
 
-            # solo_q_tier, solo_q_division, flex_tier, flex_division
-            example += tier_division(summoner_instance)
+        # solo_q_tier, solo_q_division, flex_tier, flex_division
+        example += tier_division(summoner_instance)
 
-            for feature in example:
-                ds.write("%s\t" % feature)
+        for feature in example:
+            ds.write("%s\t" % feature)
 
-            ds.write("\n")
+        ds.write("\n")
 
 
-        except Exception as e:
-            print(sum['nick'], 'failed.', e)
+        # except Exception as e:
+        #     print(sum['nick'], 'failed.', e)
 
 
 def dataset_v2():
     pass
 
-# dataset_v1()
+dataset_v1()

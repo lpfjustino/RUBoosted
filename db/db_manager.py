@@ -22,11 +22,7 @@ def get_players():
     query = list(cursor)
     cursor.close()
 
-    done = len(query) == 0
-
-    print(len(query))
-
-    return query, done
+    return query
 
 def get_summoner_by_nick(nick):
     pipeline = [

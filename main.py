@@ -39,59 +39,72 @@ def benchmark(data_set):
     print('SVM: ', scores2)
     print('KNN: ', scores3)
 
-def benchmark_SVM(data_set):
+def benchmark_SVM(data_set, mode='ovr'):
     X = data_set[:, :-1]
     y = data_set[:, -1]
 
     for i in range(5):
-        clf = svm.SVC(kernel='linear', C=1, degree=i, tol=1e-3, verbose=False, decision_function_shape='ovr')
+        clf = svm.SVC(kernel='linear', C=1, degree=i, tol=1e-3, verbose=False, decision_function_shape=mode)
         clf.fit(X, y)
         scores = cross_val_score(clf, X, y, cv=10)
 
-        print(i, scores)
+        print('Degree:',i, max(scores), scores)
 
-    clf = svm.SVC(kernel='poly', C=1, tol=1e-3, probability=True, decision_function_shape='ovr')
+    clf = svm.SVC(kernel='poly', C=1, tol=1e-3, probability=True, decision_function_shape=mode)
     clf.fit(X, y)
     scores = cross_val_score(clf, X, y, cv=10)
 
-    print(scores)
+    print("Poly:", max(scores), scores)
 
-    clf = svm.SVC(kernel='sigmoid', C=1, tol=1e-3, probability=True, decision_function_shape='ovr')
+    clf = svm.SVC(kernel='sigmoid', C=1, tol=1e-3, probability=True, decision_function_shape=mode)
     clf.fit(X, y)
     scores = cross_val_score(clf, X, y, cv=10)
 
-    print(scores)
+    print("Sigmoid:", max(scores), scores)
 
-    Cs = np.linspace(1e-2, 1, num=20)
-    for c in Cs:
-        clf = svm.SVC(kernel='rbf', C=c, tol=1e-3, probability=True, decision_function_shape='ovr')
-        clf.fit(X, y)
-        scores = cross_val_score(clf, X, y, cv=10)
-        print(c, max(scores))
+    # Cs = np.linspace(1e-2, 1, num=20)
+    # for c in Cs:
+    #     clf = svm.SVC(kernel='rbf', C=c, tol=1e-3, probability=True, decision_function_shape='ovr')
+    #     clf.fit(X, y)
+    #     scores = cross_val_score(clf, X, y, cv=10)
+    #     print('Radial', c, max(scores))
 
-def benchmark_best_SVM(data_set):
+def benchmark_best_SVM(data_set, mode):
     X = data_set[:, :-1]
     y = np.array(data_set[:, -1], dtype=int)
 
     clf = svm.SVC(kernel='rbf', C=1, tol=1e-3, probability=False, decision_function_shape='ovr')
     clf.fit(X, y)
     scores = cross_val_score(clf, X, y, cv=10)
-    print(max(scores))
+    print(max(scores), scores)
 
-df = pd.read_csv('ml/dataset2.txt', sep='\t', index_col=False)
+df = pd.read_csv('ml/_dataset2.txt', sep='\t', index_col=False)
 features = list(df)
-# chosen = np.array(['n_matches', 'kda', 'dmg', 'win_rate', 'solo_q_tier'])
-chosen = np.array(['n_matches', 'kda', 'dmg', 'win_rate', 'var_kda', 'var_dmg', 'var_wr', 'kurt_kda', 'kurt_dmg', 'kurt_wr',
-                   'skew_kda', 'skew_dmg', 'skew_wr', 'solo_q_tier'])
+chosen = np.array(['n_matches', 'kda', 'dmg', 'win_rate', 'solo_q_tier'])
+
 
 
 data_set, df = pp.preprocess(df, 4, features, chosen)
 # visualize(df, chosen)
 # benchmark(data_set)
-# benchmark_SVM(data_set)
-benchmark_best_SVM(data_set)
-#
+# print('\tOVR:')
+# benchmark_SVM(data_set, 'ovr')
+# print('\tOVO:')
+# benchmark_SVM(data_set, 'ovo')
+# print('\tBest SVM')
+# benchmark_best_SVM(data_set, 'ovr')
+# benchmark_best_SVM(data_set, 'ovo')
 
+print("===========================================")
+# chosen = np.array(['n_matches', 'kda', 'dmg', 'win_rate', 'var_kda', 'var_dmg', 'var_wr', 'kurt_kda', 'kurt_dmg', 'kurt_wr',
+#                    'skew_kda', 'skew_dmg', 'skew_wr', 'solo_q_tier'])
+# data_set, df = pp.preprocess(df, 4, features, chosen)
+# print('\tOVR:')
+# benchmark_SVM(data_set, 'ovr')
+# print('\tOVO:')
+# benchmark_SVM(data_set, 'ovo')
+# print('\tBest SVM')
+# benchmark_best_SVM(data_set)
 
 # Initializing statistics fetcher
 # sf = stf.StatisticsFetcher(verbose=True)
