@@ -15,7 +15,8 @@ def tier_division(summoner_instance):
            summoner_instance.flex_tier, summoner_instance.flex_division]
 
     for placement in placements:
-        placement.replace("None","")
+        if placement == None:
+            placement = ""
 
     return placements
 
@@ -46,8 +47,6 @@ def compute_fetures(stats, all_roles):
     for role in all_roles:
         for stat in stats:
             result.append(stat[role])
-
-    print (len(result))
 
     return result
 
@@ -128,7 +127,7 @@ def get_labels():
 
     stats_labels = '\t'.join(stats_labels)
     labels = 'nick\tn_matches\t' + stats_labels + '\tsolo_q_tier\tsolo_q_division\tflex_tier\tflex_division\n'
-    print(labels)
+
     return labels
 
 def dataset_v1(start=0):
@@ -152,31 +151,31 @@ def dataset_v1(start=0):
 
     for i, sum in enumerate(players):
         # print("\t\t",start+i, sum['nick'])
-        # try:
-        summoner_instance = s.Summoner(sum['nick'], cached=True, instance=sum)
-        example = []
+        try:
+            summoner_instance = s.Summoner(sum['nick'], cached=True, instance=sum)
+            example = []
 
-        # nick
-        example += [summoner_instance.nick]
+            # nick
+            example += [summoner_instance.nick]
 
-        # n_matches
-        example += get_n_matches(summoner_instance)
+            # n_matches
+            example += get_n_matches(summoner_instance)
 
-        # avg_kda, avg_dmg, avg_wr, var_kda, var_dmg, var_wr,
-        # kurt_kda, kurt_dmg, kurt_wr, skew_kda, skew_dmg, skew_wr
-        example += stats_per_champ(summoner_instance.ranked_stats)
+            # avg_kda, avg_dmg, avg_wr, var_kda, var_dmg, var_wr,
+            # kurt_kda, kurt_dmg, kurt_wr, skew_kda, skew_dmg, skew_wr
+            example += stats_per_champ(summoner_instance.ranked_stats)
 
-        # solo_q_tier, solo_q_division, flex_tier, flex_division
-        example += tier_division(summoner_instance)
+            # solo_q_tier, solo_q_division, flex_tier, flex_division
+            example += tier_division(summoner_instance)
 
-        for feature in example:
-            ds.write("%s\t" % feature)
+            for feature in example:
+                ds.write("%s\t" % feature)
 
-        ds.write("\n")
+            ds.write("\n")
 
 
-        # except Exception as e:
-        #     print(sum['nick'], 'failed.', e)
+        except Exception as e:
+            print(sum['nick'], 'failed.', e)
 
 
 def dataset_v2():
