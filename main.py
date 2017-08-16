@@ -13,12 +13,6 @@ from ml.ds_builder import feature_labels, all_roles
 # Build dataset from cache starting from index
 # dsb.dataset_v1(0)
 
-def get_full_chosen():
-    roles = json.loads(open('roles.txt', 'r').read())
-    all_roles = np.unique([role['role'] for role in roles])
-    stats_names = ['weights', 'avg_kda', 'avg_dmg', 'avg_wr', 'var_kda', 'var_dmg', 'var_wr',
-                   'kurt_kda', 'kurt_dmg', 'kurt_wr', 'skew_kda', 'skew_dmg', 'skew_wr']
-
 def get_short_chosen():
     # roles = json.loads(open('ml/roles.txt', 'r').read())
     # all_roles = np.unique([role['role'] for role in roles])
@@ -92,7 +86,7 @@ def benchmark_best_SVM(data_set, mode='ovo'):
     scores = cross_val_score(clf, X, y, cv=10)
     print(max(scores), scores)
 
-df = pd.read_csv('ml/datasetv2.txt', sep='\t', index_col=False)
+df = pd.read_csv('ml/final.txt', sep='\t', index_col=False)
 features = list(df)
 chosen = np.array(['n_matches'] + get_short_chosen() + ['solo_q_tier'])
 

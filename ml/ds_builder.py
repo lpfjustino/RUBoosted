@@ -2,11 +2,15 @@ import time
 import json
 import numpy as np
 import pandas as pd
+import os.path
 
 from db import db_manager as dbm
 from db import summoner as s
 
-roles = json.loads(open('roles.txt', 'r').read())
+
+script_path = os.path.dirname(__file__)
+filename = os.path.join(script_path, 'roles.txt')
+roles = json.loads(open(filename, 'r').read())
 all_roles = np.unique([role['role'] for role in roles])
 stats_names = ['weights', 'avg_kda', 'avg_dmg', 'avg_wr', 'var_kda', 'var_dmg', 'var_wr',
              'kurt_kda', 'kurt_dmg', 'kurt_wr', 'skew_kda', 'skew_dmg', 'skew_wr']
@@ -210,4 +214,3 @@ def dataset_v1(start=0):
 def dataset_v2():
     pass
 
-fill_missing_role_stats()
