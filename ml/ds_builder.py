@@ -1,6 +1,7 @@
 import time
 import json
 import numpy as np
+import pandas as pd
 
 from db import db_manager as dbm
 from db import summoner as s
@@ -41,14 +42,6 @@ def initialize_stats_dicts(all_roles):
     skew_wr = dict((role, []) for role in all_roles)
 
     return avg_kda, avg_dmg, avg_wr, var_kda, var_dmg, var_wr, kurt_kda, kurt_dmg, kurt_wr, skew_kda, skew_dmg, skew_wr, kdas,dmgs, win_rates, weights
-
-def compute_fetures(stats, all_roles):
-    result = []
-    for role in all_roles:
-        for stat in stats:
-            result.append(stat[role])
-
-    return result
 
 def stats_per_champ(ranked_stats):
     avg_kda, avg_dmg, avg_wr, var_kda, var_dmg, var_wr, kurt_kda, kurt_dmg, kurt_wr, skew_kda, skew_dmg, skew_wr, \
@@ -130,12 +123,50 @@ def get_labels():
 
     return labels
 
+def feature_labels(roles, stats):
+    feat = []
+    for role in roles:
+        for stat in stats:
+            feat.append(role + '_' + stat)
+
+    return feat
+
+def fill_missing_role_stats():
+    df = pd.read_csv('datasetv2.txt', sep='\t', index_col=False)
+    features = list(df)
+
+    stats_names = ['weights']
+    weight_features = feature_labels(all_roles, stats_names)
+    stats_names = ['avg_kda', 'avg_dmg', 'avg_wr', 'var_kda', 'var_dmg', 'var_wr',
+             'kurt_kda', 'kurt_dmg', 'kurt_wr', 'skew_kda', 'skew_dmg', 'skew_wr']
+    stats_features = feature_labels(all_roles, stats_names)
+
+    for w_feat in weight_features:
+        # Computes players that plays or not those roles
+        role_not_played = df.loc[:,w_feat] == 1
+        role_played = df.loc[:,w_feat] != 1
+
+        # The average is weighted by how many games the player has played in that role
+        weights = df.loc[role_played,w_feat]
+
+        for s_feat in stats_features:
+            feature_avg = np.average(df.loc[role_played,s_feat].as_matrix(), weights=weights)
+            df.loc[role_not_played, s_feat] = feature_avg
+
+    final = open('final.txt', 'w', encoding="utf8")
+    final.write(get_labels())
+
+    for index, row in df.iterrows():
+        for feature in row.as_matrix():
+            final.write("%s\t" % feature)
+        final.write("\n")
+
 def dataset_v1(start=0):
     print('Building begun')
 
     # Write header
     if start == 0:
-        ds = open('dataset2.txt', "w", encoding="utf8")
+        ds = open('_dataset2.txt', "w", encoding="utf8")
         ds.write(get_labels())
 
     else:
@@ -151,34 +182,32 @@ def dataset_v1(start=0):
 
     for i, sum in enumerate(players):
         # print("\t\t",start+i, sum['nick'])
-        try:
-            summoner_instance = s.Summoner(sum['nick'], cached=True, instance=sum)
-            example = []
+        summoner_instance = s.Summoner(sum['nick'], cached=True, instance=sum)
+        example = []
 
-            # nick
-            example += [summoner_instance.nick]
+        # nick
+        example += [summoner_instance.nick]
 
-            # n_matches
-            example += get_n_matches(summoner_instance)
+        # n_matches
+        example += get_n_matches(summoner_instance)
 
-            # avg_kda, avg_dmg, avg_wr, var_kda, var_dmg, var_wr,
-            # kurt_kda, kurt_dmg, kurt_wr, skew_kda, skew_dmg, skew_wr
-            example += stats_per_champ(summoner_instance.ranked_stats)
+        # avg_kda, avg_dmg, avg_wr, var_kda, var_dmg, var_wr,
+        # kurt_kda, kurt_dmg, kurt_wr, skew_kda, skew_dmg, skew_wr
+        example += stats_per_champ(summoner_instance.ranked_stats)
 
-            # solo_q_tier, solo_q_division, flex_tier, flex_division
-            example += tier_division(summoner_instance)
+        # solo_q_tier, solo_q_division, flex_tier, flex_division
+        example += tier_division(summoner_instance)
 
-            for feature in example:
-                ds.write("%s\t" % feature)
+        for feature in example:
+            ds.write("%s\t" % feature)
 
-            ds.write("\n")
+        ds.write("\n")
 
-
-        except Exception as e:
-            print(sum['nick'], 'failed.', e)
+    ds.close()
+    fill_missing_role_stats()
 
 
 def dataset_v2():
     pass
 
-dataset_v1()
+fill_missing_role_stats()

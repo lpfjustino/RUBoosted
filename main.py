@@ -4,13 +4,27 @@ from sklearn import svm
 from sklearn.model_selection import cross_val_score
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neural_network import MLPClassifier
-
+import json
 from ml import preprocessor as pp
 from tools import visualization as v
+from ml.ds_builder import feature_labels, all_roles
 
 
 # Build dataset from cache starting from index
 # dsb.dataset_v1(0)
+
+def get_full_chosen():
+    roles = json.loads(open('roles.txt', 'r').read())
+    all_roles = np.unique([role['role'] for role in roles])
+    stats_names = ['weights', 'avg_kda', 'avg_dmg', 'avg_wr', 'var_kda', 'var_dmg', 'var_wr',
+                   'kurt_kda', 'kurt_dmg', 'kurt_wr', 'skew_kda', 'skew_dmg', 'skew_wr']
+
+def get_short_chosen():
+    # roles = json.loads(open('ml/roles.txt', 'r').read())
+    # all_roles = np.unique([role['role'] for role in roles])
+    stats_names = ['weights', 'avg_kda', 'avg_dmg', 'avg_wr']
+
+    return feature_labels(all_roles, stats_names)
 
 def visualize(df, chosen):
     v.show_2d(df, chosen[[1,2,4]])
@@ -39,7 +53,7 @@ def benchmark(data_set):
     print('SVM: ', scores2)
     print('KNN: ', scores3)
 
-def benchmark_SVM(data_set, mode='ovr'):
+def benchmark_SVM(data_set, mode='ovo'):
     X = data_set[:, :-1]
     y = data_set[:, -1]
 
@@ -69,33 +83,23 @@ def benchmark_SVM(data_set, mode='ovr'):
     #     scores = cross_val_score(clf, X, y, cv=10)
     #     print('Radial', c, max(scores))
 
-def benchmark_best_SVM(data_set, mode):
+def benchmark_best_SVM(data_set, mode='ovo'):
     X = data_set[:, :-1]
     y = np.array(data_set[:, -1], dtype=int)
 
-    clf = svm.SVC(kernel='rbf', C=1, tol=1e-3, probability=False, decision_function_shape='ovr')
+    clf = svm.SVC(kernel='rbf', C=1, tol=1e-3, probability=True, decision_function_shape='ovr')
     clf.fit(X, y)
     scores = cross_val_score(clf, X, y, cv=10)
     print(max(scores), scores)
 
-df = pd.read_csv('ml/_dataset2.txt', sep='\t', index_col=False)
+df = pd.read_csv('ml/datasetv2.txt', sep='\t', index_col=False)
 features = list(df)
-chosen = np.array(['n_matches', 'kda', 'dmg', 'win_rate', 'solo_q_tier'])
-
+chosen = np.array(['n_matches'] + get_short_chosen() + ['solo_q_tier'])
 
 
 data_set, df = pp.preprocess(df, 4, features, chosen)
 # visualize(df, chosen)
-# benchmark(data_set)
-# print('\tOVR:')
-# benchmark_SVM(data_set, 'ovr')
-# print('\tOVO:')
-# benchmark_SVM(data_set, 'ovo')
-# print('\tBest SVM')
-# benchmark_best_SVM(data_set, 'ovr')
-# benchmark_best_SVM(data_set, 'ovo')
 
-print("===========================================")
 # chosen = np.array(['n_matches', 'kda', 'dmg', 'win_rate', 'var_kda', 'var_dmg', 'var_wr', 'kurt_kda', 'kurt_dmg', 'kurt_wr',
 #                    'skew_kda', 'skew_dmg', 'skew_wr', 'solo_q_tier'])
 # data_set, df = pp.preprocess(df, 4, features, chosen)
@@ -104,7 +108,7 @@ print("===========================================")
 # print('\tOVO:')
 # benchmark_SVM(data_set, 'ovo')
 # print('\tBest SVM')
-# benchmark_best_SVM(data_set)
+benchmark_best_SVM(data_set)
 
 # Initializing statistics fetcher
 # sf = stf.StatisticsFetcher(verbose=True)

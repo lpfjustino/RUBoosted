@@ -132,5 +132,7 @@
 	{"key": "238", "name": "Zed", "role": "Assassin"}, 
 	{"key": "115", "name": "Ziggs", "role": "Mage"}, 
 	{"key": "26", "name": "Zilean", "role": "Mage"}, 
-	{"key": "143", "name": "Zyra", "role": "Mage"}
+	{"key": "143", "name": "Zyra", "role": "Mage"},
+	{"key": "497", "name": "Rakan", "role": "Support"},
+	{"key": "498", "name": "Xayah", "role": "Marksman"}
 ]
