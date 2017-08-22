@@ -24,8 +24,11 @@ class Elo(Enum):
 
         return elos
 
+# If an instance is given, desserializes using it, otherwise
+# fetches it on the database
 class Summoner:
     def __init__(self, nick, cached=False, instance=None):
+        # Fetches the summoner if not cached
         if not cached:
             sf = stf.StatisticsFetcher()
             self.nick = nick

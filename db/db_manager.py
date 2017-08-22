@@ -1,34 +1,26 @@
-import json
-
 from pymongo import MongoClient
-
 from db.queries import *
+import json
 
 client = MongoClient()
 db = client['RUBoosted']
 
 def all_summoner_nicks():
-    pipeline = [
-        { "$project": {"_id":0, "nick":1} },
-        { "$group": { "_id": "$nick" } }
-    ]
-    query = db['summoners'].aggregate(pipeline)
+    query = db['summoners'].aggregate(all_nicks)
     sums = query_to_list(query)
 
     return sums
 
 def get_players():
-    cursor = db['summoners'].aggregate(summoners_pipeline, allowDiskUse=True)
+    cursor = db['summoners'].aggregate(all_summoners, allowDiskUse=True)
     query = list(cursor)
     cursor.close()
 
     return query
 
+# Fetches a summoner given his nick
 def get_summoner_by_nick(nick):
-    pipeline = [
-        { "$match": { "nick":nick } },
-        { "$project": {"_id": 0 } },
-    ]
+    pipeline = all_summoner_nicks(nick)
     query = db['summoners'].aggregate(pipeline)
     sum = list(query)[0]
 
@@ -36,6 +28,7 @@ def get_summoner_by_nick(nick):
 
     return instance
 
+# Casts a mongo query object to a list
 def query_to_list(query):
     my_list = list(query)
     my_list = [next(iter(x.values())) for x in my_list]

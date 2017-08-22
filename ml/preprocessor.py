@@ -1,8 +1,6 @@
 import numpy as np
 import pandas as pd
-
 from db.summoner import Elo
-
 from sklearn import preprocessing
 
 
@@ -53,7 +51,7 @@ def uniform_elo_sampling(data):
         if elo.value == Elo['DIAMOND'].value:
             break
 
-    # smallest_pool = 500
+    smallest_pool = 20
     for sample in samples:
         uniform = uniform.append(sample.iloc[:smallest_pool, :])
 
@@ -78,7 +76,7 @@ def preprocess(my_df, n_labels, features, chosen_features):
     set_elos(placements)
     df.loc[:, features[-n_labels:]] = placements
 
-    #df, n = uniform_elo_sampling(df)
+    df, n = uniform_elo_sampling(df)
 
     df = df.loc[:, chosen_features]
 
