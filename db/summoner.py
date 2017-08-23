@@ -27,7 +27,7 @@ class Elo(Enum):
 # If an instance is given, desserializes using it, otherwise
 # fetches it on the database
 class Summoner:
-    def __init__(self, nick, cached=False, instance=None):
+    def __init__(self, nick, cached=False, instance=None, full=False):
         # Fetches the summoner if not cached
         if not cached:
             sf = stf.StatisticsFetcher()
@@ -46,7 +46,7 @@ class Summoner:
                 raise stf.SummonerNotExists(nick)
         else:
             if instance is None:
-                self.deserialize_by_nick(nick)
+                self.deserialize_by_nick(nick, full)
             else:
                 self.deserialize_by_instance(instance)
 
@@ -58,8 +58,8 @@ class Summoner:
         with open('summoners/'+self.nick+'.txt', 'w') as outfile:
             outfile.write(self.toJSON())
 
-    def deserialize_by_nick(self, nick):
-        self.__dict__ = dbm.get_summoner_by_nick(nick)
+    def deserialize_by_nick(self, nick, full):
+        self.__dict__ = dbm.get_summoner_by_nick(nick, full)
 
         # if fill == True:
         #     self.fill_missing_props()

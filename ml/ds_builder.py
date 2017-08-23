@@ -215,8 +215,47 @@ def dataset_v1():
     fill_missing_role_stats()
 
 
-def dataset_v2():
-    pass
+def dataset_v2(skip=0):
+    print('Building begun')
+
+    if skip == 0:
+        ds = open('DS.txt', "w", encoding="utf8")
+        ds.write(get_labels())
+    else:
+        ds = open('DS.txt', "a", encoding="utf8")
+
+    players = dbm.all_summoner_nicks(skip)
+
+
+    for i, sum in enumerate(players):
+        start_read_time = time.time()
+        summoner_instance = s.Summoner(sum, cached=True, full=True)
+        end_read_time = time.time()
+        print('\t',skip+i, ':', sum,'\t\t', end_read_time-start_read_time)
+
+        example = []
+
+        # nick
+        example += [summoner_instance.nick]
+
+        # n_matches
+        example += get_n_matches(summoner_instance)
+
+        # avg_kda, avg_dmg, avg_wr, var_kda, var_dmg, var_wr,
+        # kurt_kda, kurt_dmg, kurt_wr, skew_kda, skew_dmg, skew_wr
+        example += stats_per_champ(summoner_instance.ranked_stats)
+
+        # solo_q_tier, solo_q_division, flex_tier, flex_division
+        example += tier_division(summoner_instance)
+
+        for feature in example:
+            ds.write("%s\t" % feature)
+
+        ds.write("\n")
+
+    ds.close()
+    fill_missing_role_stats()
 
 # dataset_v1()
 # fill_missing_role_stats()
+dataset_v2(0)

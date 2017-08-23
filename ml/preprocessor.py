@@ -63,7 +63,6 @@ def rescale(data):
 
     print(data.mean(axis=0))
     print(data.std(axis=0))
-    dsa
 
     return data
 
