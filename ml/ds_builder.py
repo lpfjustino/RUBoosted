@@ -7,11 +7,11 @@ import os.path
 from db import db_manager as dbm
 from db import summoner as s
 
-
 script_path = os.path.dirname(__file__)
 filename = os.path.join(script_path, 'roles2.txt')
-roles = json.loads(open(filename, 'r').read())
-all_roles = np.unique([role['role'] for role in roles])
+champ_roles = json.loads(open(filename, 'r').read())
+all_roles = np.unique([role['role'] for role in champ_roles])
+base_stats = ['weights', 'kdas', 'dmgs', 'win_rates']
 stats_names = ['weights', 'avg_kda', 'avg_dmg', 'avg_wr', 'var_kda', 'var_dmg', 'var_wr',
              'kurt_kda', 'kurt_dmg', 'kurt_wr', 'skew_kda', 'skew_dmg', 'skew_wr']
 
@@ -25,31 +25,16 @@ def tier_division(summoner_instance):
 
     return placements
 
-def initialize_stats_dicts(all_roles):
-    # Create empty dictionaries by role
-    kdas = dict((role,[]) for role in all_roles)
-    dmgs = dict((role,[]) for role in all_roles)
-    win_rates = dict((role,[]) for role in all_roles)
-    weights = dict((role,[]) for role in all_roles)
-
-    avg_kda = dict((role, []) for role in all_roles)
-    avg_dmg = dict((role, []) for role in all_roles)
-    avg_wr = dict((role, []) for role in all_roles)
-    var_kda = dict((role, []) for role in all_roles)
-    var_dmg = dict((role, []) for role in all_roles)
-    var_wr = dict((role, []) for role in all_roles)
-    kurt_kda = dict((role, []) for role in all_roles)
-    kurt_dmg = dict((role, []) for role in all_roles)
-    kurt_wr = dict((role, []) for role in all_roles)
-    skew_kda = dict((role, []) for role in all_roles)
-    skew_dmg = dict((role, []) for role in all_roles)
-    skew_wr = dict((role, []) for role in all_roles)
-
-    return avg_kda, avg_dmg, avg_wr, var_kda, var_dmg, var_wr, kurt_kda, kurt_dmg, kurt_wr, skew_kda, skew_dmg, skew_wr, kdas,dmgs, win_rates, weights
-
+# Returns the following attributes:
+# avg_kda, avg_dmg, avg_wr, var_kda, var_dmg, var_wr,
+# kurt_kda, kurt_dmg, kurt_wr, skew_kda, skew_dmg, skew_wr
 def stats_per_champ(ranked_stats):
-    avg_kda, avg_dmg, avg_wr, var_kda, var_dmg, var_wr, kurt_kda, kurt_dmg, kurt_wr, skew_kda, skew_dmg, skew_wr, \
-        kdas, dmgs, win_rates, weights = initialize_stats_dicts(all_roles)
+    # Initialize stats dicts with empty lists
+    stats = dict()
+    for r in all_roles:
+        stats[r] = dict()
+        for stat in base_stats:
+            stats[r][stat] = []
 
     for champ in ranked_stats:
         # Skips the anomalous id 0 champion
@@ -65,7 +50,7 @@ def stats_per_champ(ranked_stats):
 
         # Find champion's role
         role = ""
-        for r in roles:
+        for r in champ_roles:
             if int(r['key']) == champ['id']:
                 role = r['role']
 
@@ -77,49 +62,43 @@ def stats_per_champ(ranked_stats):
         win_rate = wins / games_played
 
         # Push stats to their role's array
-        weights[role].append(games_played)
-        kdas[role].append(kda)
-        dmgs[role].append(dmg)
-        win_rates[role].append(win_rate)
+        stats[role]['weights'].append(games_played)
+        stats[role]['kdas'].append(kda)
+        stats[role]['dmgs'].append(dmg)
+        stats[role]['win_rates'].append(win_rate)
 
     for r in all_roles:
         # Skips if user didn't play with any champions of that role
-        if len(weights[r]) == 0:
-            weights[r].append(1)
-            kdas[r].append(0)
-            dmgs[r].append(0)
-            win_rates[r].append(0)
+        if len(stats[r]['weights']) == 0:
+            stats[r]['weights'] = 1
+            stats[r]['kdas'] = 0
+            stats[r]['dmgs'] = 0
+            stats[r]['win_rates'] = 0
 
-        avg_kda[r] = np.average(kdas[r], weights=weights[r])
-        avg_dmg[r] = np.average(dmgs[r], weights=weights[r])
-        avg_wr[r] = np.average(win_rates[r], weights=weights[r])
+        stats[r]['avg_kda'] = np.average(stats[r]['kdas'], weights=stats[r]['weights'])
+        stats[r]['avg_dmg'] = np.average(stats[r]['dmgs'], weights=stats[r]['weights'])
+        stats[r]['avg_wr'] = np.average(stats[r]['win_rates'], weights=stats[r]['weights'])
 
-        # var_kda[r] = np.average((kdas[r] - avg_kda[r]) ** 2, weights=weights[r])
-        # var_dmg[r] = np.average((dmgs[r] - avg_dmg[r]) ** 2, weights=weights[r])
-        # var_wr[r] = np.average((win_rates[r] - avg_wr[r]) ** 2, weights=weights[r])
+        stats[r]['var_kda'] = np.average((stats[r]['avg_kda'] - stats[r]['kdas']), weights=stats[r]['weights'])
+        stats[r]['var_dmg'] = np.average((stats[r]['avg_dmg'] - stats[r]['dmgs']), weights=stats[r]['weights'])
+        stats[r]['var_wr'] = np.average((stats[r]['avg_wr'] - stats[r]['win_rates']), weights=stats[r]['weights'])
 
-        var_kda[r] = np.average((avg_kda[r] - kdas[r]), weights=weights[r])
-        var_dmg[r] = np.average((avg_dmg[r] - dmgs[r]), weights=weights[r])
-        var_wr[r] = np.average((avg_wr[r] - win_rates[r]), weights=weights[r])
+        stats[r]['kurt_kda'] = np.average((stats[r]['kdas'] - stats[r]['avg_kda']) ** 3, weights=stats[r]['weights'])
+        stats[r]['kurt_dmg'] = np.average((stats[r]['dmgs'] - stats[r]['avg_dmg']) ** 3, weights=stats[r]['weights'])
+        stats[r]['kurt_wr'] = np.average((stats[r]['win_rates'] - stats[r]['avg_wr']) ** 3, weights=stats[r]['weights'])
 
-        kurt_kda[r] = np.average((kdas[r] - avg_kda[r]) ** 3, weights=weights[r])
-        kurt_dmg[r] = np.average((dmgs[r] - avg_dmg[r]) ** 3, weights=weights[r])
-        kurt_wr[r] = np.average((win_rates[r] - avg_wr[r]) ** 3, weights=weights[r])
+        stats[r]['skew_kda'] = np.average((stats[r]['kdas'] - stats[r]['avg_kda']) ** 4, weights=stats[r]['weights'])
+        stats[r]['skew_dmg'] = np.average((stats[r]['dmgs'] - stats[r]['avg_dmg']) ** 4, weights=stats[r]['weights'])
+        stats[r]['skew_wr'] = np.average((stats[r]['win_rates'] - stats[r]['avg_wr']) ** 4, weights=stats[r]['weights'])
 
-        skew_kda[r] = np.average((kdas[r] - avg_kda[r]) ** 4, weights=weights[r])
-        skew_dmg[r] = np.average((dmgs[r] - avg_dmg[r]) ** 4, weights=weights[r])
-        skew_wr[r] = np.average((win_rates[r] - avg_wr[r]) ** 4, weights=weights[r])
+        stats[r]['weights'] = np.sum(stats[r]['weights'])
 
-        weights[r] = np.sum(weights[r])
-
-    stats = [weights, avg_kda, avg_dmg, avg_wr, var_kda, var_dmg, var_wr,
-             kurt_kda, kurt_dmg, kurt_wr, skew_kda, skew_dmg, skew_wr]
-
+    print(stats)
     # Compute_features
     result = []
     for role in all_roles:
-        for stat in stats:
-            result.append(stat[role])
+        for stat in stats_names:
+            result.append(stats[role][stat])
 
     return result
 
@@ -137,9 +116,9 @@ def get_labels():
 
     return labels
 
-def feature_labels(roles, stats):
+def feature_labels(champ_roles, stats):
     feat = []
-    for role in roles:
+    for role in champ_roles:
         for stat in stats:
             feat.append(role + '_' + stat)
 
@@ -156,7 +135,7 @@ def fill_missing_role_stats():
     stats_features = feature_labels(all_roles, stats_names)
 
     for w_feat in weight_features:
-        # Computes players that plays or not those roles
+        # Computes players that plays or not those champ_roles
         role_not_played = df.loc[:,w_feat] == 1
         role_played = df.loc[:,w_feat] != 1
 
@@ -241,8 +220,7 @@ def dataset_v2(skip=0):
         # n_matches
         example += get_n_matches(summoner_instance)
 
-        # avg_kda, avg_dmg, avg_wr, var_kda, var_dmg, var_wr,
-        # kurt_kda, kurt_dmg, kurt_wr, skew_kda, skew_dmg, skew_wr
+
         example += stats_per_champ(summoner_instance.ranked_stats)
 
         # solo_q_tier, solo_q_division, flex_tier, flex_division
