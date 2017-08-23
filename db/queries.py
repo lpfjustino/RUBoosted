@@ -77,7 +77,7 @@ def all_nicks(skip=0):
 
 def all_joined_summoners(nick):
     return [
-		{ '$match': {'nick': 'Luispfj'}},
+		{ '$match': {'nick': nick}},
 		# Unwind different queues
 		{ '$unwind': '$leagues'},
 		# Unwind every league member
