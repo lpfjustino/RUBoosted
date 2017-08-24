@@ -12,8 +12,7 @@ filename = os.path.join(script_path, 'roles2.txt')
 champ_roles = json.loads(open(filename, 'r').read())
 all_roles = np.unique([role['role'] for role in champ_roles])
 base_stats = ['weights', 'kdas', 'dmgs', 'win_rates']
-stats_names = ['weights', 'avg_kda', 'avg_dmg', 'avg_wr', 'var_kda', 'var_dmg', 'var_wr',
-             'kurt_kda', 'kurt_dmg', 'kurt_wr', 'skew_kda', 'skew_dmg', 'skew_wr']
+stats_names = ['weights', 'avg_kda', 'avg_dmg', 'avg_wr', 'var_kda', 'var_dmg', 'var_wr']
 
 def tier_division(summoner_instance):
     placements = [summoner_instance.soloq_tier, summoner_instance.soloq_division, \
@@ -79,21 +78,12 @@ def stats_per_champ(ranked_stats):
         stats[r]['avg_dmg'] = np.average(stats[r]['dmgs'], weights=stats[r]['weights'])
         stats[r]['avg_wr'] = np.average(stats[r]['win_rates'], weights=stats[r]['weights'])
 
-        stats[r]['var_kda'] = np.average((stats[r]['avg_kda'] - stats[r]['kdas']), weights=stats[r]['weights'])
-        stats[r]['var_dmg'] = np.average((stats[r]['avg_dmg'] - stats[r]['dmgs']), weights=stats[r]['weights'])
-        stats[r]['var_wr'] = np.average((stats[r]['avg_wr'] - stats[r]['win_rates']), weights=stats[r]['weights'])
-
-        stats[r]['kurt_kda'] = np.average((stats[r]['kdas'] - stats[r]['avg_kda']) ** 3, weights=stats[r]['weights'])
-        stats[r]['kurt_dmg'] = np.average((stats[r]['dmgs'] - stats[r]['avg_dmg']) ** 3, weights=stats[r]['weights'])
-        stats[r]['kurt_wr'] = np.average((stats[r]['win_rates'] - stats[r]['avg_wr']) ** 3, weights=stats[r]['weights'])
-
-        stats[r]['skew_kda'] = np.average((stats[r]['kdas'] - stats[r]['avg_kda']) ** 4, weights=stats[r]['weights'])
-        stats[r]['skew_dmg'] = np.average((stats[r]['dmgs'] - stats[r]['avg_dmg']) ** 4, weights=stats[r]['weights'])
-        stats[r]['skew_wr'] = np.average((stats[r]['win_rates'] - stats[r]['avg_wr']) ** 4, weights=stats[r]['weights'])
+        stats[r]['var_kda'] = np.average((stats[r]['kdas'] - stats[r]['avg_kda'])**2, weights=stats[r]['weights'])
+        stats[r]['var_dmg'] = np.average((stats[r]['dmgs'] - stats[r]['avg_dmg'])**2, weights=stats[r]['weights'])
+        stats[r]['var_wr'] = np.average((stats[r]['win_rates'] - stats[r]['avg_wr'])**2, weights=stats[r]['weights'])
 
         stats[r]['weights'] = np.sum(stats[r]['weights'])
 
-    print(stats)
     # Compute_features
     result = []
     for role in all_roles:
@@ -105,6 +95,7 @@ def stats_per_champ(ranked_stats):
 def get_n_matches(summoner_instance):
     return [len(summoner_instance.matches)]
 
+# Combine roles and stats names to get labels
 def get_labels():
     stats_labels = []
     for role in all_roles:
@@ -124,14 +115,11 @@ def feature_labels(champ_roles, stats):
 
     return feat
 
+# Fills statistics with average for players that do not play some role
 def fill_missing_role_stats():
     df = pd.read_csv('datasetv3.txt', sep='\t', index_col=False)
-    features = list(df)
 
-    stats_names = ['weights']
-    weight_features = feature_labels(all_roles, stats_names)
-    stats_names = ['avg_kda', 'avg_dmg', 'avg_wr', 'var_kda', 'var_dmg', 'var_wr',
-             'kurt_kda', 'kurt_dmg', 'kurt_wr', 'skew_kda', 'skew_dmg', 'skew_wr']
+    weight_features = feature_labels(all_roles, ['weights'])
     stats_features = feature_labels(all_roles, stats_names)
 
     for w_feat in weight_features:
@@ -198,13 +186,12 @@ def dataset_v2(skip=0):
     print('Building begun')
 
     if skip == 0:
-        ds = open('DS.txt', "w", encoding="utf8")
+        ds = open('DS.tsv', "w", encoding="utf8")
         ds.write(get_labels())
     else:
-        ds = open('DS.txt', "a", encoding="utf8")
+        ds = open('DS.tsv', "a", encoding="utf8")
 
     players = dbm.all_summoner_nicks(skip)
-
 
     for i, sum in enumerate(players):
         start_read_time = time.time()
@@ -216,13 +203,10 @@ def dataset_v2(skip=0):
 
         # nick
         example += [summoner_instance.nick]
-
         # n_matches
         example += get_n_matches(summoner_instance)
-
-
+        # stats
         example += stats_per_champ(summoner_instance.ranked_stats)
-
         # solo_q_tier, solo_q_division, flex_tier, flex_division
         example += tier_division(summoner_instance)
 
