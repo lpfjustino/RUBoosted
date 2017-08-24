@@ -4,14 +4,10 @@ from sklearn import svm
 from sklearn.model_selection import cross_val_score
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neural_network import MLPClassifier
-import json
 from ml import preprocessor as pp
 from tools import visualization as v
 from ml.ds_builder import feature_labels, all_roles
 
-
-# Build dataset from cache starting from index
-# dsb.dataset_v1(0)
 
 def get_short_chosen():
     # roles = json.loads(open('ml/roles.txt', 'r').read())
@@ -92,7 +88,7 @@ def benchmark_best_SVM(data_set, mode='ovr'):
     print(max(scores), scores)
 
 print('Reading file')
-df = pd.read_csv('ml/final2.txt', sep='\t', index_col=False)
+df = pd.read_csv('ml/final.txt', sep='\t', index_col=False)
 print('File read')
 features = list(df)
 chosen = np.array(['n_matches'] + get_short_chosen() + ['solo_q_tier'])

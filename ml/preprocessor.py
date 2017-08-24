@@ -34,11 +34,12 @@ def set_elos(placements):
     placements.iloc[:,2] = elos
 
 
-def uniform_elo_sampling(data):
+def uniform_elo_sampling(data, pool=None):
     samples = []
     uniform = pd.DataFrame()
     smallest_pool = float('inf')
 
+    # Appends to samples array a sample of players in each elo
     for elo in Elo:
         is_such_elo = data.loc[:,'solo_q_tier'] == elo.value
         players = data[is_such_elo]
@@ -51,7 +52,11 @@ def uniform_elo_sampling(data):
         if elo.value == Elo['DIAMOND'].value:
             break
 
-    smallest_pool = 20
+    # Overrides the calculated pool if one is given
+    if pool is not None:
+        smallest_pool = pool
+
+    # Creates uniform sample
     for sample in samples:
         uniform = uniform.append(sample.iloc[:smallest_pool, :])
 
