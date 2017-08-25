@@ -23,6 +23,15 @@ def tier_division(summoner_instance):
 
     return placements
 
+def role_by_champion_id(id):
+    # Find champion's role
+    role = ""
+    for r in champ_roles:
+        if int(r['key']) == id:
+            role = r['role']
+
+    return role
+
 # Returns the following attributes:
 # avg_kda, avg_dmg, avg_wr, var_kda, var_dmg, var_wr,
 # kurt_kda, kurt_dmg, kurt_wr, skew_kda, skew_dmg, skew_wr
@@ -47,11 +56,7 @@ def stats_per_champ(ranked_stats):
         wins = champ['stats']['totalSessionsWon']
         games_played = champ['stats']['totalSessionsPlayed']
 
-        # Find champion's role
-        role = ""
-        for r in champ_roles:
-            if int(r['key']) == champ['id']:
-                role = r['role']
+        role = role_by_champion_id(champ['id'])
 
         # Compute KDA
         if deaths == 0:
@@ -93,8 +98,22 @@ def stats_per_champ(ranked_stats):
     return result
 
 
+def get_features_labels(summarizations, base_stats):
+    labels = []
+    for s in summarizations:
+        for bs in base_stats:
+            labels += s + "_" + bs
+    return labels
+
+
 def matches_details(matches):
-    base_stats = ['gold', 'tanked', 'cs', 'vision_score', 'wards_bought', 'wards_killed', 'wards_placed']
+    base_stats = ['goldEarned', 'totalDamageTaken', 'totalMinionsKilled', 'visionScore', 'visionWardsBoughtInGame',
+                  'wardsKilled', 'wardsPlaced']
+    summarizations = ['avg', 'var']
+
+    features = get_features_labels(summarizations, base_stats)
+    # TODO: CONTINUAR
+
     # Initialize stats dicts with empty lists
     stats = dict()
     for r in all_roles:
@@ -103,14 +122,15 @@ def matches_details(matches):
             stats[r][stat] = []
 
     for match in matches:
-        print(match.participant.stats.goldEarned)
-        print(match.participant.stats.totalDamageTaken)
-        print(match.participant.stats.totalMinionsKilled)
-        print(match.participant.stats.visionScore)
-        print(match.participant.stats.visionsWardsBoughtInGame)
-        print(match.participant.stats.wardsKilled)
-        print(match.participant.stats.wardsPlaced)
-        dsa
+        role = role_by_champion_id(match['champion'])
+        print('> ', match['champion'], role)
+        print(match['participant']['stats']['goldEarned'])
+        print(match['participant']['stats']['totalDamageTaken'])
+        print(match['participant']['stats']['totalMinionsKilled'])
+        print(match['participant']['stats']['visionScore'])
+        print(match['participant']['stats']['visionWardsBoughtInGame'])
+        print(match['participant']['stats']['wardsKilled'])
+        print(match['participant']['stats']['wardsPlaced'])
 
 def get_n_matches(summoner_instance):
     return [len(summoner_instance.matches)]
@@ -122,25 +142,21 @@ def get_labels():
         for stat in stats_names:
             stats_labels.append(role+'_'+stat)
 
+            # Trocar por !!!
+            # get_features_labels()
+
     stats_labels = '\t'.join(stats_labels)
     labels = 'nick\tn_matches\t' + stats_labels + '\tsolo_q_tier\tsolo_q_division\tflex_tier\tflex_division\n'
 
     return labels
 
-def feature_labels(champ_roles, stats):
-    feat = []
-    for role in champ_roles:
-        for stat in stats:
-            feat.append(role + '_' + stat)
-
-    return feat
-
 # Fills statistics with average for players that do not play some role
 def fill_missing_role_stats():
     df = pd.read_csv('datasetv3.txt', sep='\t', index_col=False)
 
-    weight_features = feature_labels(all_roles, ['weights'])
-    stats_features = feature_labels(all_roles, stats_names)
+    # PODE ESTAR INVERTIDO!!!
+    weight_features = get_features_labels(all_roles, ['weights'])
+    stats_features = get_features_labels(all_roles, stats_names)
 
     for w_feat in weight_features:
         # Computes players that plays or not those champ_roles
@@ -244,4 +260,4 @@ def dataset_v2(skip=0):
 
 # dataset_v1()
 # fill_missing_role_stats()
-# dataset_v2(0)
+dataset_v2(0)
