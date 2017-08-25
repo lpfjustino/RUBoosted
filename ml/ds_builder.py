@@ -11,7 +11,6 @@ script_path = os.path.dirname(__file__)
 filename = os.path.join(script_path, 'roles2.txt')
 champ_roles = json.loads(open(filename, 'r').read())
 all_roles = np.unique([role['role'] for role in champ_roles])
-base_stats = ['weights', 'kdas', 'dmgs', 'win_rates']
 stats_names = ['weights', 'avg_kda', 'avg_dmg', 'avg_wr', 'var_kda', 'var_dmg', 'var_wr']
 
 def tier_division(summoner_instance):
@@ -28,6 +27,7 @@ def tier_division(summoner_instance):
 # avg_kda, avg_dmg, avg_wr, var_kda, var_dmg, var_wr,
 # kurt_kda, kurt_dmg, kurt_wr, skew_kda, skew_dmg, skew_wr
 def stats_per_champ(ranked_stats):
+    base_stats = ['weights', 'kdas', 'dmgs', 'win_rates']
     # Initialize stats dicts with empty lists
     stats = dict()
     for r in all_roles:
@@ -91,6 +91,26 @@ def stats_per_champ(ranked_stats):
             result.append(stats[role][stat])
 
     return result
+
+
+def matches_details(matches):
+    base_stats = ['gold', 'tanked', 'cs', 'vision_score', 'wards_bought', 'wards_killed', 'wards_placed']
+    # Initialize stats dicts with empty lists
+    stats = dict()
+    for r in all_roles:
+        stats[r] = dict()
+        for stat in base_stats:
+            stats[r][stat] = []
+
+    for match in matches:
+        print(match.participant.stats.goldEarned)
+        print(match.participant.stats.totalDamageTaken)
+        print(match.participant.stats.totalMinionsKilled)
+        print(match.participant.stats.visionScore)
+        print(match.participant.stats.visionsWardsBoughtInGame)
+        print(match.participant.stats.wardsKilled)
+        print(match.participant.stats.wardsPlaced)
+        dsa
 
 def get_n_matches(summoner_instance):
     return [len(summoner_instance.matches)]
@@ -209,11 +229,15 @@ def dataset_v2(skip=0):
         example += stats_per_champ(summoner_instance.ranked_stats)
         # solo_q_tier, solo_q_division, flex_tier, flex_division
         example += tier_division(summoner_instance)
+        #
+        example += matches_details(summoner_instance.matches)
 
         for feature in example:
             ds.write("%s\t" % feature)
 
         ds.write("\n")
+
+        dsa
 
     ds.close()
     fill_missing_role_stats()
