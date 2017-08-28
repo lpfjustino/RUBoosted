@@ -11,7 +11,11 @@ script_path = os.path.dirname(__file__)
 filename = os.path.join(script_path, 'roles2.txt')
 champ_roles = json.loads(open(filename, 'r').read())
 all_roles = np.unique([role['role'] for role in champ_roles])
-stats_names = ['weights', 'avg_kda', 'avg_dmg', 'avg_wr', 'var_kda', 'var_dmg', 'var_wr']
+
+champion_stats = ['kda', 'dmg', 'wr']
+match_stats = ['goldEarned', 'totalDamageTaken', 'totalMinionsKilled', 'visionScore', 'visionWardsBoughtInGame',
+              'wardsKilled', 'wardsPlaced']
+summarizations = ['avg', 'var']
 
 def tier_division(summoner_instance):
     placements = [summoner_instance.soloq_tier, summoner_instance.soloq_division, \
@@ -33,10 +37,11 @@ def role_by_champion_id(id):
     return role
 
 # Returns the following attributes:
-# avg_kda, avg_dmg, avg_wr, var_kda, var_dmg, var_wr,
-# kurt_kda, kurt_dmg, kurt_wr, skew_kda, skew_dmg, skew_wr
+# avg_kda, avg_dmg, avg_wr, var_kda, var_dmg, var_wr
 def stats_per_champ(ranked_stats):
     base_stats = ['weights', 'kdas', 'dmgs', 'win_rates']
+    stats_names = combine_into_labels(summarizations, champion_stats)
+
     # Initialize stats dicts with empty lists
     stats = dict()
     for r in all_roles:
@@ -87,7 +92,7 @@ def stats_per_champ(ranked_stats):
         stats[r]['var_dmg'] = np.average((stats[r]['dmgs'] - stats[r]['avg_dmg'])**2, weights=stats[r]['weights'])
         stats[r]['var_wr'] = np.average((stats[r]['win_rates'] - stats[r]['avg_wr'])**2, weights=stats[r]['weights'])
 
-        stats[r]['weights'] = np.sum(stats[r]['weights'])
+        # stats[r]['weights'] = np.sum(stats[r]['weights'])
 
     # Compute_features
     result = []
@@ -98,37 +103,31 @@ def stats_per_champ(ranked_stats):
     return result
 
 
-def get_features_labels(summarizations, base_stats):
+def combine_into_labels(prefix, sufix):
     labels = []
-    for s in summarizations:
-        for bs in base_stats:
-            labels.append(s + "_" + bs)
+    for p in prefix:
+        for s in sufix:
+            labels.append(p + "_" + s)
     return labels
 
 
 def matches_details(matches):
-    base_stats = ['goldEarned', 'totalDamageTaken', 'totalMinionsKilled', 'visionScore', 'visionWardsBoughtInGame',
-                  'wardsKilled', 'wardsPlaced']
-    summarizations = ['avg', 'var']
-
-    features = get_features_labels(summarizations, base_stats)
-
     # Initialize stats dicts with empty lists
     stats = dict()
     for r in all_roles:
         stats[r] = dict()
-        for stat in base_stats:
+        for stat in match_stats:
             stats[r][stat] = []
 
     # Fetch info from all matches
     for match in matches:
         role = role_by_champion_id(match['champion'])
-        for bs in base_stats:
+        for bs in match_stats:
             stats[role][bs].append(match['participant']['stats'][bs])
 
     result = []
     for role in all_roles:
-        for bs in base_stats:
+        for bs in match_stats:
             avg = np.average(stats[role][bs])
             var = np.average((stats[role][bs] - avg)**2)
 
@@ -140,16 +139,23 @@ def get_n_matches(summoner_instance):
     return [len(summoner_instance.matches)]
 
 # Combine roles and stats names to get labels
-def get_labels():
+def get_labels(version='v2'):
     stats_labels = []
-    for role in all_roles:
-        for stat in stats_names:
-            stats_labels.append(role+'_'+stat)
 
-            # Trocar por !!!
-            # get_features_labels()
+    stat_champ = combine_into_labels(summarizations, champion_stats)
+    role_stat_champ = combine_into_labels(all_roles, stat_champ)
 
-    stats_labels = '\t'.join(stats_labels)
+    # Champion stats labels
+    stats_labels.append(role_stat_champ)
+
+    if version == 'v2':
+        stat_match = combine_into_labels(summarizations, match_stats)
+        role_stat_match = combine_into_labels(all_roles, stat_match)
+
+        # Matches stats labels
+        stats_labels.append(role_stat_match)
+
+    stats_labels = '\t'.join(str(v) for v in stats_labels)
     labels = 'nick\tn_matches\t' + stats_labels + '\tsolo_q_tier\tsolo_q_division\tflex_tier\tflex_division\n'
 
     return labels
@@ -159,8 +165,9 @@ def fill_missing_role_stats():
     df = pd.read_csv('datasetv3.txt', sep='\t', index_col=False)
 
     # PODE ESTAR INVERTIDO!!!
-    weight_features = get_features_labels(all_roles, ['weights'])
-    stats_features = get_features_labels(all_roles, stats_names)
+    weight_features = combine_into_labels(all_roles, ['weights'])
+    # stats_features = get_features_labels(all_roles, stats_names)
+    stats_features = ['weights'] + combine_into_labels(summarizations, champion_stats)
     print('--',weight_features, stats_features,'--')
     for w_feat in weight_features:
         # Computes players that plays or not those champ_roles
@@ -245,19 +252,17 @@ def dataset_v2(skip=0):
         example += [summoner_instance.nick]
         # n_matches
         example += get_n_matches(summoner_instance)
-        # stats
+        # champion stats
         example += stats_per_champ(summoner_instance.ranked_stats)
         # solo_q_tier, solo_q_division, flex_tier, flex_division
         example += tier_division(summoner_instance)
-        #
+        # match stats
         example += matches_details(summoner_instance.matches)
 
         for feature in example:
             ds.write("%s\t" % feature)
 
         ds.write("\n")
-
-        dsa
 
     ds.close()
     fill_missing_role_stats()
