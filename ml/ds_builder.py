@@ -102,7 +102,7 @@ def get_features_labels(summarizations, base_stats):
     labels = []
     for s in summarizations:
         for bs in base_stats:
-            labels += s + "_" + bs
+            labels.append(s + "_" + bs)
     return labels
 
 
@@ -112,7 +112,6 @@ def matches_details(matches):
     summarizations = ['avg', 'var']
 
     features = get_features_labels(summarizations, base_stats)
-    # TODO: CONTINUAR
 
     # Initialize stats dicts with empty lists
     stats = dict()
@@ -121,16 +120,21 @@ def matches_details(matches):
         for stat in base_stats:
             stats[r][stat] = []
 
+    # Fetch info from all matches
     for match in matches:
         role = role_by_champion_id(match['champion'])
-        print('> ', match['champion'], role)
-        print(match['participant']['stats']['goldEarned'])
-        print(match['participant']['stats']['totalDamageTaken'])
-        print(match['participant']['stats']['totalMinionsKilled'])
-        print(match['participant']['stats']['visionScore'])
-        print(match['participant']['stats']['visionWardsBoughtInGame'])
-        print(match['participant']['stats']['wardsKilled'])
-        print(match['participant']['stats']['wardsPlaced'])
+        for bs in base_stats:
+            stats[role][bs].append(match['participant']['stats'][bs])
+
+    result = []
+    for role in all_roles:
+        for bs in base_stats:
+            avg = np.average(stats[role][bs])
+            var = np.average((stats[role][bs] - avg)**2)
+
+            result += [avg, var]
+
+    return result
 
 def get_n_matches(summoner_instance):
     return [len(summoner_instance.matches)]
@@ -157,7 +161,7 @@ def fill_missing_role_stats():
     # PODE ESTAR INVERTIDO!!!
     weight_features = get_features_labels(all_roles, ['weights'])
     stats_features = get_features_labels(all_roles, stats_names)
-
+    print('--',weight_features, stats_features,'--')
     for w_feat in weight_features:
         # Computes players that plays or not those champ_roles
         role_not_played = df.loc[:,w_feat] == 1
