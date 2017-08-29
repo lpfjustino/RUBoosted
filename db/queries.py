@@ -98,7 +98,8 @@ def all_joined_summoners(nick):
 			'_id': '$nick',
 			'leagues': {'$push': '$leagues'},
 			'matches': {'$first': '$matches'},
-			'ranked_stats': {'$first': '$ranked_stats'}
+			'ranked_stats': {'$first': '$ranked_stats'},
+            'sum_id': {'$first': '$sum_id'}
 		}
 		},
 
@@ -130,7 +131,7 @@ def all_joined_summoners(nick):
                             '$filter': {
                                 'input':'$sumMatches.participantIdentities',
                                 'as':'playerOnly',
-                                'cond': { '$eq': ['$$playerOnly.player.summonerName','$_id'] }
+                                'cond': { '$eq': ['$$playerOnly.player.summonerId','$sum_id'] }
                             }
                         },0]
                 }

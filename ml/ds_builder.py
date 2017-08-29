@@ -13,8 +13,7 @@ champ_roles = json.loads(open(filename, 'r').read())
 all_roles = np.unique([role['role'] for role in champ_roles])
 
 champion_stats = ['kda', 'dmg', 'wr']
-match_stats = ['goldEarned', 'totalDamageTaken', 'totalMinionsKilled', 'visionScore', 'visionWardsBoughtInGame',
-              'wardsKilled', 'wardsPlaced']
+match_stats = ['goldEarned', 'totalDamageTaken', 'totalMinionsKilled', 'visionScore', 'visionWardsBoughtInGame']
 summarizations = ['avg', 'var']
 
 def tier_division(summoner_instance):
@@ -122,8 +121,14 @@ def matches_details(matches):
     # Fetch info from all matches
     for match in matches:
         role = role_by_champion_id(match['champion'])
-        for bs in match_stats:
-            stats[role][bs].append(match['participant']['stats'][bs])
+        import json
+        import time
+        try:
+            for bs in match_stats:
+                stats[role][bs].append(match['participant']['stats'][bs])
+        except:
+            print('falhou', bs)
+            print(json.dumps(match))
 
     result = []
     for role in all_roles:
@@ -238,7 +243,10 @@ def dataset_v2(skip=0):
     else:
         ds = open('DS.tsv', "a", encoding="utf8")
 
-    players = dbm.all_summoner_nicks(skip)
+    # players = dbm.all_summoner_nicks(skip)
+    f = open('../10_pool.txt')
+    players = [x.replace('\n', '') for x in f.readlines()]
+    print(players)
 
     for i, sum in enumerate(players):
         start_read_time = time.time()
