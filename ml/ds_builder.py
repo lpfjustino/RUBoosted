@@ -20,9 +20,9 @@ def tier_division(summoner_instance):
     placements = [summoner_instance.soloq_tier, summoner_instance.soloq_division, \
            summoner_instance.flex_tier, summoner_instance.flex_division]
 
-    for placement in placements:
+    for i, placement in enumerate(placements):
         if placement == None:
-            placement = ""
+            placements[i] = ""
 
     return placements
 
@@ -91,7 +91,7 @@ def stats_per_champ(ranked_stats):
         stats[r]['var_dmg'] = np.average((stats[r]['dmgs'] - stats[r]['avg_dmg'])**2, weights=stats[r]['weights'])
         stats[r]['var_wr'] = np.average((stats[r]['win_rates'] - stats[r]['avg_wr'])**2, weights=stats[r]['weights'])
 
-        # stats[r]['weights'] = np.sum(stats[r]['weights'])
+        stats[r]['weights'] = np.sum(stats[r]['weights'])
 
     # Compute_features
     result = []
@@ -121,14 +121,8 @@ def matches_details(matches):
     # Fetch info from all matches
     for match in matches:
         role = role_by_champion_id(match['champion'])
-        import json
-        import time
-        try:
-            for bs in match_stats:
-                stats[role][bs].append(match['participant']['stats'][bs])
-        except:
-            print('falhou', bs)
-            print(json.dumps(match))
+        for bs in match_stats:
+            stats[role][bs].append(match['participant']['stats'][bs])
 
     result = []
     for role in all_roles:
@@ -142,6 +136,18 @@ def matches_details(matches):
 
 def get_n_matches(summoner_instance):
     return [len(summoner_instance.matches)]
+
+# Auxiliary function to include weights
+def get_labels_with_weights():
+    stats_labels = []
+    stat_champ = combine_into_labels(summarizations, champion_stats)
+    for role in all_roles:
+        role_stat_champ = combine_into_labels([role], stat_champ)
+        stats_labels.append(role_stat_champ)
+        # Adding weights statistic
+        weight_stat = combine_into_labels([role],['weights'])
+        stats_labels.append(weight_stat)
+        flattened = [val for sublist in stats_labels for val in sublist]
 
 # Combine roles and stats names to get labels
 def get_labels(version='v2'):
@@ -277,4 +283,5 @@ def dataset_v2(skip=0):
 
 # dataset_v1()
 # fill_missing_role_stats()
+get_labels_aux()
 dataset_v2(0)
