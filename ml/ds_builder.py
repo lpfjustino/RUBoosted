@@ -22,7 +22,11 @@ def tier_division(summoner_instance):
 
     for i, placement in enumerate(placements):
         if placement == None:
+            print(placements[i])
             placements[i] = ""
+            print(placements[i])
+            print('---------')
+
 
     return placements
 
@@ -148,25 +152,29 @@ def get_labels_with_weights():
         weight_stat = combine_into_labels([role],['weights'])
         stats_labels.append(weight_stat)
         flattened = [val for sublist in stats_labels for val in sublist]
+    return flattened
 
 # Combine roles and stats names to get labels
 def get_labels(version='v2'):
     stats_labels = []
 
-    stat_champ = combine_into_labels(summarizations, champion_stats)
-    role_stat_champ = combine_into_labels(all_roles, stat_champ)
+    # stat_champ = combine_into_labels(summarizations, champion_stats)
+    # role_stat_champ = combine_into_labels(all_roles, stat_champ)
+    labels = get_labels_with_weights()
 
     # Champion stats labels
-    stats_labels.append(role_stat_champ)
+    # stats_labels.append(role_stat_champ)
+    stats_labels += labels
 
     if version == 'v2':
         stat_match = combine_into_labels(summarizations, match_stats)
         role_stat_match = combine_into_labels(all_roles, stat_match)
 
         # Matches stats labels
-        stats_labels.append(role_stat_match)
+        stats_labels += role_stat_match
 
-    stats_labels = '\t'.join(str(v) for v in stats_labels)
+
+    stats_labels = '\t'.join(stats_labels)
     labels = 'nick\tn_matches\t' + stats_labels + '\tsolo_q_tier\tsolo_q_division\tflex_tier\tflex_division\n'
 
     return labels
@@ -175,11 +183,10 @@ def get_labels(version='v2'):
 def fill_missing_role_stats():
     df = pd.read_csv('datasetv3.txt', sep='\t', index_col=False)
 
-    # PODE ESTAR INVERTIDO!!!
     weight_features = combine_into_labels(all_roles, ['weights'])
-    # stats_features = get_features_labels(all_roles, stats_names)
-    stats_features = ['weights'] + combine_into_labels(summarizations, champion_stats)
-    print('--',weight_features, stats_features,'--')
+    # stats_features = weight_features + combine_into_labels(summarizations, champion_stats)
+    stats_features = list(df.columns.values[2:-4])
+
     for w_feat in weight_features:
         # Computes players that plays or not those champ_roles
         role_not_played = df.loc[:,w_feat] == 1
@@ -192,8 +199,9 @@ def fill_missing_role_stats():
             feature_avg = np.average(df.loc[role_played,s_feat].as_matrix(), weights=weights)
             df.loc[role_not_played, s_feat] = feature_avg
 
-    final = open('final2.txt', 'w', encoding="utf8")
-    final.write(get_labels())
+    final = open('final2.tsv', 'w', encoding="utf8")
+    # Copy header
+    final.write("\t".join(list(df.columns.values)))
 
     for index, row in df.iterrows():
         for feature in row.as_matrix():
@@ -252,7 +260,6 @@ def dataset_v2(skip=0):
     # players = dbm.all_summoner_nicks(skip)
     f = open('../10_pool.txt')
     players = [x.replace('\n', '') for x in f.readlines()]
-    print(players)
 
     for i, sum in enumerate(players):
         start_read_time = time.time()
@@ -268,10 +275,10 @@ def dataset_v2(skip=0):
         example += get_n_matches(summoner_instance)
         # champion stats
         example += stats_per_champ(summoner_instance.ranked_stats)
-        # solo_q_tier, solo_q_division, flex_tier, flex_division
-        example += tier_division(summoner_instance)
         # match stats
         example += matches_details(summoner_instance.matches)
+        # solo_q_tier, solo_q_division, flex_tier, flex_division
+        example += tier_division(summoner_instance)
 
         for feature in example:
             ds.write("%s\t" % feature)
@@ -282,6 +289,5 @@ def dataset_v2(skip=0):
     fill_missing_role_stats()
 
 # dataset_v1()
-# fill_missing_role_stats()
-get_labels_aux()
 dataset_v2(0)
+fill_missing_role_stats()
