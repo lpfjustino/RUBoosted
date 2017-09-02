@@ -7,8 +7,15 @@ import os.path
 from db import db_manager as dbm
 from db import summoner as s
 
+# Parameters (REFACTOR!):
+resource_path = "resources/"
+roles_file = "roles"
+dataset_file = "DS"
+pool_file = "250_pool"
+full_base = False
+
 script_path = os.path.dirname(__file__)
-filename = os.path.join(script_path, 'roles.txt')
+filename = os.path.join(script_path, resource_path, roles_file + '.txt')
 champ_roles = json.loads(open(filename, 'r').read())
 all_roles = np.unique([role['role'] for role in champ_roles])
 
@@ -176,7 +183,7 @@ def get_labels(version='v2'):
 
 # Fills statistics with average for players that do not play some role
 def fill_missing_role_stats():
-    df = pd.read_csv('datasetv3.txt', sep='\t', index_col=False)
+    df = pd.read_csv(resource_path + dataset_file + '.tsv', sep='\t', index_col=False)
     print(list(df.columns.values))
 
     weight_features = combine_into_labels(all_roles, ['weights'])
@@ -206,7 +213,7 @@ def fill_missing_role_stats():
 def dataset_v1():
     print('Building begun')
 
-    ds = open('datasetv3.txt', "w", encoding="utf8")
+    ds = open(resource_path + dataset_file + '.tsv', "w", encoding="utf8")
     ds.write(get_labels())
 
     start_read_time = time.time()
@@ -253,9 +260,11 @@ def dataset_v2(skip=0):
     else:
         ds = open('DS.tsv', "a", encoding="utf8")
 
-    # players = dbm.all_summoner_nicks(skip)
-    f = open('../250_pool.txt')
-    players = [x.replace('\n', '') for x in f.readlines()]
+    if full_base:
+        players = dbm.all_summoner_nicks(skip)
+    else:
+        f = open(resource_path + pool_file + '.txt')
+        players = [x.replace('\n', '') for x in f.readlines()]
 
     for i, sum in enumerate(players):
         start_read_time = time.time()
