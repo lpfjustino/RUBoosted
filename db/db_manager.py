@@ -25,9 +25,14 @@ def get_summoner_by_nick(nick, join = False):
         pipeline = all_joined_summoners(nick)
 
     query = db['summoners'].aggregate(pipeline)
-    sum = list(query)[0]
+    sum = list(query)
 
-    instance = json.loads(json.dumps(sum))
+    if len(sum) > 0:
+        sum = sum[0]
+        instance = json.loads(json.dumps(sum))
+
+    else:
+        raise Exception("Couldn't fetch summoner (likely join failed)")
 
     return instance
 

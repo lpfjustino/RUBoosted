@@ -8,7 +8,7 @@ from db import db_manager as dbm
 from db import summoner as s
 
 script_path = os.path.dirname(__file__)
-filename = os.path.join(script_path, 'roles2.txt')
+filename = os.path.join(script_path, 'roles.txt')
 champ_roles = json.loads(open(filename, 'r').read())
 all_roles = np.unique([role['role'] for role in champ_roles])
 
@@ -22,11 +22,7 @@ def tier_division(summoner_instance):
 
     for i, placement in enumerate(placements):
         if placement == None:
-            print(placements[i])
             placements[i] = ""
-            print(placements[i])
-            print('---------')
-
 
     return placements
 
@@ -40,7 +36,6 @@ def role_by_champion_id(id):
     return role
 
 # Returns the following attributes:
-# avg_kda, avg_dmg, avg_wr, var_kda, var_dmg, var_wr
 def stats_per_champ(ranked_stats):
     base_stats = ['weights', 'kdas', 'dmgs', 'win_rates']
     stats_names = combine_into_labels(summarizations, champion_stats)
@@ -99,9 +94,12 @@ def stats_per_champ(ranked_stats):
 
     # Compute_features
     result = []
+
+    # Appends the weights and statistics for every role
     for role in all_roles:
         for stat in stats_names:
             result.append(stats[role][stat])
+        result.append(stats[role]['weights'])
 
     return result
 
@@ -158,12 +156,9 @@ def get_labels_with_weights():
 def get_labels(version='v2'):
     stats_labels = []
 
-    # stat_champ = combine_into_labels(summarizations, champion_stats)
-    # role_stat_champ = combine_into_labels(all_roles, stat_champ)
     labels = get_labels_with_weights()
 
     # Champion stats labels
-    # stats_labels.append(role_stat_champ)
     stats_labels += labels
 
     if version == 'v2':
@@ -182,9 +177,9 @@ def get_labels(version='v2'):
 # Fills statistics with average for players that do not play some role
 def fill_missing_role_stats():
     df = pd.read_csv('datasetv3.txt', sep='\t', index_col=False)
+    print(list(df.columns.values))
 
     weight_features = combine_into_labels(all_roles, ['weights'])
-    # stats_features = weight_features + combine_into_labels(summarizations, champion_stats)
     stats_features = list(df.columns.values[2:-4])
 
     for w_feat in weight_features:
@@ -249,6 +244,7 @@ def dataset_v1():
 
 
 def dataset_v2(skip=0):
+    failed = []
     print('Building begun')
 
     if skip == 0:
@@ -258,14 +254,19 @@ def dataset_v2(skip=0):
         ds = open('DS.tsv', "a", encoding="utf8")
 
     # players = dbm.all_summoner_nicks(skip)
-    f = open('../10_pool.txt')
+    f = open('../250_pool.txt')
     players = [x.replace('\n', '') for x in f.readlines()]
 
     for i, sum in enumerate(players):
         start_read_time = time.time()
-        summoner_instance = s.Summoner(sum, cached=True, full=True)
+        try:
+            summoner_instance = s.Summoner(sum, cached=True, full=True)
+        except Exception:
+            failed.append(sum)
+            continue
+
         end_read_time = time.time()
-        print('\t',skip+i, ':', sum,'\t\t', end_read_time-start_read_time)
+        print('\t',(skip+i)/len(players)*100, ':', sum,'\t\t', end_read_time-start_read_time)
 
         example = []
 
@@ -286,8 +287,9 @@ def dataset_v2(skip=0):
         ds.write("\n")
 
     ds.close()
+    print("The following summoners failed: ", failed)
     fill_missing_role_stats()
 
 # dataset_v1()
-dataset_v2(0)
+# dataset_v2(0)
 fill_missing_role_stats()
