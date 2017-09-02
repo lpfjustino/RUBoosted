@@ -21,6 +21,7 @@ all_roles = np.unique([role['role'] for role in champ_roles])
 
 champion_stats = ['kda', 'dmg', 'wr']
 match_stats = ['goldEarned', 'totalDamageTaken', 'totalMinionsKilled', 'visionScore', 'visionWardsBoughtInGame']
+all_stats = champion_stats + match_stats
 summarizations = ['avg', 'var']
 
 def tier_division(summoner_instance):
@@ -182,26 +183,32 @@ def get_labels(version='v2'):
     return labels
 
 # Fills statistics with average for players that do not play some role
-def fill_missing_role_stats():
+def fill_missing_role_stats(threshold = 1):
     df = pd.read_csv(resource_path + dataset_file + '.tsv', sep='\t', index_col=False)
-    print(list(df.columns.values))
 
-    weight_features = combine_into_labels(all_roles, ['weights'])
-    stats_features = list(df.columns.values[2:-4])
 
-    for w_feat in weight_features:
+    for role in all_roles:
+        weight_feature = combine_into_labels([role], ['weights'])
+
         # Computes players that plays or not those champ_roles
-        role_not_played = df.loc[:,w_feat] == 1
-        role_played = df.loc[:,w_feat] != 1
+        role_not_played = (df.loc[:,weight_feature] <= threshold).values.flatten()
+        role_played = (df.loc[:,weight_feature] > threshold).values.flatten()
+
+        stats_features = combine_into_labels([role], summarizations)
+        stats_features = combine_into_labels(stats_features, all_stats)
 
         # The average is weighted by how many games the player has played in that role
-        weights = df.loc[role_played,w_feat]
+        weights = df.loc[role_played,weight_feature].values.flatten()
 
         for s_feat in stats_features:
             feature_avg = np.average(df.loc[role_played,s_feat].as_matrix(), weights=weights)
             df.loc[role_not_played, s_feat] = feature_avg
 
-    final = open('final2.tsv', 'w', encoding="utf8")
+        # Leaves 1 as number of matches played
+        df.loc[role_not_played, weight_feature] = 1
+
+    final = open(resource_path + "pp_" + dataset_file + '.tsv', 'w', encoding="utf8")
+
     # Copy header
     final.write("\t".join(list(df.columns.values)))
 
