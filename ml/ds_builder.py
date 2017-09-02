@@ -9,9 +9,9 @@ from db import summoner as s
 
 # Parameters (REFACTOR!):
 resource_path = "resources/"
-roles_file = "roles"
+roles_file = "roles/roles"
+pool_file = "pools/250_pool"
 dataset_file = "DS"
-pool_file = "250_pool"
 full_base = False
 
 script_path = os.path.dirname(__file__)
@@ -308,4 +308,4 @@ def dataset_v2(skip=0):
 
 # dataset_v1()
 # dataset_v2(0)
-fill_missing_role_stats()
+# fill_missing_role_stats()
