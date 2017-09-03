@@ -88,15 +88,16 @@ def benchmark_best_SVM(data_set, mode='ovr'):
     print(max(scores), scores)
 
 print('Reading file')
-df = pd.read_csv('ml/resources/DS.tsv', sep='\t', index_col=False)
+df = pd.read_csv('ml/resources/pp_DS.tsv', sep='\t', index_col=False)
 print('File read')
 features = list(df)
 
 # Ignoring nick, flex elo and divisions
-chosen = df.iloc[:,1:-3].columns.values
+chosen = list(df.iloc[:,1:-3].columns.values)
 
 print('Preprocessing')
 data_set, df = pp.preprocess(df, 4, features, chosen)
+print(df)
 print('Preprocessed')
 # visualize(df, chosen)
 

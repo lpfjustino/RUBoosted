@@ -267,6 +267,7 @@ def dataset_v2(skip=0):
     if skip == 0:
         ds = open(resource_path + dataset_file + '.tsv', "w", encoding="utf8")
         ds.write(get_labels())
+        ds.write('\n')
     else:
         ds = open(resource_path + dataset_file + '.tsv', "a", encoding="utf8")
 
@@ -310,5 +311,5 @@ def dataset_v2(skip=0):
     fill_missing_role_stats()
 
 # dataset_v1()
-dataset_v2(0)
+# dataset_v2(0)
 # fill_missing_role_stats()
