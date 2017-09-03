@@ -6,7 +6,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neural_network import MLPClassifier
 from ml import preprocessor as pp
 from tools import visualization as v
-from ml.ds_builder import feature_labels, all_roles
+from ml.ds_builder import combine_into_labels, all_roles
 
 
 def get_short_chosen():
@@ -15,7 +15,7 @@ def get_short_chosen():
     # stats_names = ['weights', 'avg_kda', 'avg_dmg', 'avg_wr']
     stats_names = ['weights', 'avg_kda', 'avg_dmg', 'avg_wr', 'var_kda', 'var_dmg']
 
-    return feature_labels(all_roles, stats_names)
+    return combine_into_labels(all_roles, stats_names)
 
 def visualize(df, chosen):
     print(df[:,chosen[1,8]])
@@ -42,7 +42,7 @@ def benchmark(data_set):
     knn.fit(X, y)
     scores3 = cross_val_score(knn, X, y, cv=5)
 
-    print('MLP/:', scores)
+    print('MLP:', scores)
     print('SVM: ', scores2)
     print('KNN: ', scores3)
 
@@ -88,15 +88,17 @@ def benchmark_best_SVM(data_set, mode='ovr'):
     print(max(scores), scores)
 
 print('Reading file')
-df = pd.read_csv('ml/final.txt', sep='\t', index_col=False)
+df = pd.read_csv('ml/resources/DS.tsv', sep='\t', index_col=False)
 print('File read')
 features = list(df)
-chosen = np.array(['n_matches'] + get_short_chosen() + ['solo_q_tier'])
+
+# Ignoring nick, flex elo and divisions
+chosen = df.iloc[:,1:-3].columns.values
 
 print('Preprocessing')
 data_set, df = pp.preprocess(df, 4, features, chosen)
 print('Preprocessed')
-visualize(df, chosen)
+# visualize(df, chosen)
 
 # chosen = np.array(['n_matches', 'kda', 'dmg', 'win_rate', 'var_kda', 'var_dmg', 'var_wr', 'kurt_kda', 'kurt_dmg', 'kurt_wr',
 #                    'skew_kda', 'skew_dmg', 'skew_wr', 'solo_q_tier'])

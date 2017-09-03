@@ -10,7 +10,7 @@ from db import summoner as s
 # Parameters (REFACTOR!):
 resource_path = "resources/"
 roles_file = "roles/roles"
-pool_file = "pools/250_pool"
+pool_file = "pools/10_pool"
 dataset_file = "DS"
 full_base = False
 
@@ -44,7 +44,7 @@ def role_by_champion_id(id):
     return role
 
 # Returns the following attributes:
-def stats_per_champ(ranked_stats):
+def stats_per_champ(ranked_stats, threshold = 1):
     base_stats = ['weights', 'kdas', 'dmgs', 'win_rates']
     stats_names = combine_into_labels(summarizations, champion_stats)
 
@@ -83,8 +83,8 @@ def stats_per_champ(ranked_stats):
         stats[role]['win_rates'].append(win_rate)
 
     for r in all_roles:
-        # Skips if user didn't play with any champions of that role
-        if len(stats[r]['weights']) == 0:
+        # Skips if user didn't play enough matches with any champions of that role
+        if len(stats[r]['weights']) < threshold:
             stats[r]['weights'] = 1
             stats[r]['kdas'] = 0
             stats[r]['dmgs'] = 0
@@ -120,7 +120,7 @@ def combine_into_labels(prefix, sufix):
     return labels
 
 
-def matches_details(matches):
+def matches_details(matches, threshold = 1):
     # Initialize stats dicts with empty lists
     stats = dict()
     for r in all_roles:
@@ -137,8 +137,12 @@ def matches_details(matches):
     result = []
     for role in all_roles:
         for bs in match_stats:
-            avg = np.average(stats[role][bs])
-            var = np.average((stats[role][bs] - avg)**2)
+            if len(stats[role][bs]) < threshold:
+                avg = 0
+                var = 0
+            else:
+                avg = np.average(stats[role][bs])
+                var = np.average((stats[role][bs] - avg)**2)
 
             result += [avg, var]
 
@@ -307,5 +311,5 @@ def dataset_v2(skip=0):
     fill_missing_role_stats()
 
 # dataset_v1()
-# dataset_v2(0)
-# fill_missing_role_stats()
+dataset_v2(0)
+fill_missing_role_stats()
