@@ -145,7 +145,6 @@ def matches_details(matches, threshold = 1):
                 var = np.average((stats[role][bs] - avg)**2)
 
             result += [avg, var]
-
     return result
 
 def get_n_matches(summoner_instance):
@@ -266,10 +265,10 @@ def dataset_v2(skip=0):
     print('Building begun')
 
     if skip == 0:
-        ds = open('DS.tsv', "w", encoding="utf8")
+        ds = open(resource_path + dataset_file + '.tsv', "w", encoding="utf8")
         ds.write(get_labels())
     else:
-        ds = open('DS.tsv', "a", encoding="utf8")
+        ds = open(resource_path + dataset_file + '.tsv', "a", encoding="utf8")
 
     if full_base:
         players = dbm.all_summoner_nicks(skip)
@@ -312,4 +311,4 @@ def dataset_v2(skip=0):
 
 # dataset_v1()
 dataset_v2(0)
-fill_missing_role_stats()
+# fill_missing_role_stats()
