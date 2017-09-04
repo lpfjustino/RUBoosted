@@ -10,7 +10,7 @@ from db import summoner as s
 # Parameters (REFACTOR!):
 resource_path = "resources/"
 roles_file = "roles/roles"
-pool_file = "pools/250_pool"
+pool_file = "pools/10_pool"
 dataset_file = "DS"
 full_base = False
 
@@ -127,12 +127,14 @@ def matches_details(matches, threshold = 1):
         stats[r] = dict()
         for stat in match_stats:
             stats[r][stat] = []
+        stats[r]['gameDuration'] = []
 
     # Fetch info from all matches
     for match in matches:
         role = role_by_champion_id(match['champion'])
         for bs in match_stats:
             stats[role][bs].append(match['participant']['stats'][bs])
+        stats[role]['gameDuration'].append(match['gameDuration'])
 
     result = []
     for role in all_roles:
@@ -145,13 +147,23 @@ def matches_details(matches, threshold = 1):
                 var = np.average((stats[role][bs] - avg)**2)
 
             result += [avg, var]
+
+        # Computing separately stats for gameDuration
+        if len(stats[role][bs]) < threshold:
+            avg = 1800 # 30m
+            var = 300 # 5m
+        else:
+            avg = np.average(stats[role]['gameDuration'])
+            var = np.average((stats[role]['gameDuration'] - avg) ** 2)
+        result += [avg, var]
+    print(len(result))
     return result
 
 def get_n_matches(summoner_instance):
     return [len(summoner_instance.matches)]
 
 # Auxiliary function to include weights
-def get_labels_with_weights():
+def get_champion_stats_labels():
     stats_labels = []
     stat_champ = combine_into_labels(summarizations, champion_stats)
     for role in all_roles:
@@ -160,24 +172,37 @@ def get_labels_with_weights():
         # Adding weights statistic
         weight_stat = combine_into_labels([role],['weights'])
         stats_labels.append(weight_stat)
+
+    flattened = [val for sublist in stats_labels for val in sublist]
+    return flattened
+
+def get_match_stats_labels():
+    stats_labels = []
+    stat_champ = combine_into_labels(summarizations, match_stats)
+    for role in all_roles:
+        role_stat_champ = combine_into_labels([role], stat_champ)
+        stats_labels.append(role_stat_champ)
+
+        # Adding gameDuration statistic
+        sum_duration = combine_into_labels(summarizations, ['gameDuration'])
+        game_duration = combine_into_labels([role],sum_duration)
+        stats_labels.append(game_duration)
         flattened = [val for sublist in stats_labels for val in sublist]
+
     return flattened
 
 # Combine roles and stats names to get labels
 def get_labels(version='v2'):
     stats_labels = []
 
-    labels = get_labels_with_weights()
-
     # Champion stats labels
+    labels = get_champion_stats_labels()
     stats_labels += labels
 
     if version == 'v2':
-        stat_match = combine_into_labels(summarizations, match_stats)
-        role_stat_match = combine_into_labels(all_roles, stat_match)
-
         # Matches stats labels
-        stats_labels += role_stat_match
+        labels = get_match_stats_labels()
+        stats_labels += labels
 
 
     stats_labels = '\t'.join(stats_labels)
@@ -311,5 +336,5 @@ def dataset_v2(skip=0):
     fill_missing_role_stats()
 
 # dataset_v1()
-# dataset_v2(0)
+dataset_v2(0)
 # fill_missing_role_stats()
