@@ -10,7 +10,7 @@ from db import summoner as s
 # Parameters (REFACTOR!):
 resource_path = "resources/"
 roles_file = "roles/roles"
-pool_file = "pools/10_pool"
+pool_file = "pools/250_pool"
 dataset_file = "DS"
 full_base = False
 
@@ -156,7 +156,7 @@ def matches_details(matches, threshold = 1):
             avg = np.average(stats[role]['gameDuration'])
             var = np.average((stats[role]['gameDuration'] - avg) ** 2)
         result += [avg, var]
-    print(len(result))
+
     return result
 
 def get_n_matches(summoner_instance):
