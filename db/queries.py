@@ -182,9 +182,16 @@ def all_joined_summoners(nick):
                                     'cond': { '$eq': ['$$playerTeam.teamId','$participant.teamId'] }
                                 }
                             }, 0]
+                        },
+                        'gameDuration': '$sumMatches.gameDuration',
+                        'weight': '1', # Considers as 1 match to summarize
+                        'won': {
+                            '$cond': {
+                                'if': {'$eq': ['$participant.stats.win', False]},
+                                'then': '0',
+                                'else': '1'}
                         }
                     },
-					'gameDuration': '$sumMatches.gameDuration',
 				},
 				'ranked_stats': 1
 			}

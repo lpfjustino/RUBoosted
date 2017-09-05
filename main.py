@@ -97,7 +97,6 @@ chosen = list(df.iloc[:,1:-3].columns.values)
 
 print('Preprocessing')
 data_set, df = pp.preprocess(df, 4, features, chosen)
-print(df)
 print('Preprocessed')
 # visualize(df, chosen)
 
