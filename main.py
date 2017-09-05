@@ -9,14 +9,6 @@ from tools import visualization as v
 from ml.ds_builder import combine_into_labels, all_roles
 
 
-def get_short_chosen():
-    # roles = json.loads(open('ml/roles.txt', 'r').read())
-    # all_roles = np.unique([role['role'] for role in roles])
-    # stats_names = ['weights', 'avg_kda', 'avg_dmg', 'avg_wr']
-    stats_names = ['weights', 'avg_kda', 'avg_dmg', 'avg_wr', 'var_kda', 'var_dmg']
-
-    return combine_into_labels(all_roles, stats_names)
-
 def visualize(df, chosen):
     print(df[:,chosen[1,8]])
     v.show_2d(df, chosen[[1,7,19]])

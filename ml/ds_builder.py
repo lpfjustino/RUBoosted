@@ -10,7 +10,7 @@ from db import summoner as s
 # Parameters (REFACTOR!):
 resource_path = "resources/"
 roles_file = "roles/roles"
-pool_file = "pools/10_pool"
+pool_file = "pools/1_pool"
 dataset_file = "DS"
 full_base = False
 
@@ -21,6 +21,9 @@ all_roles = np.unique([role['role'] for role in champ_roles])
 
 handle_stats = {
     'goldEarned': {'reduce': 'disp', 'default':{'avg':0, 'var':0}},
+    'kills': {'reduce': 'disp', 'default':{'avg':0, 'var':0}},
+    'deaths': {'reduce': 'disp', 'default':{'avg':0, 'var':0}},
+    'assists': {'reduce': 'disp', 'default':{'avg':0, 'var':0}},
     'totalDamageTaken': {'reduce': 'disp', 'default':{'avg':0, 'var':0}},
     'totalMinionsKilled': {'reduce': 'disp', 'default':{'avg':0, 'var':0}},
     'visionScore': {'reduce': 'disp', 'default':{'avg':0, 'var':0}},
@@ -229,6 +232,5 @@ def dataset_v2(skip=0):
     print("The following summoners failed: ", failed)
     fill_missing_role_stats()
 
-# dataset_v1()
-dataset_v2(0)
+# dataset_v2(0)
 # fill_missing_role_stats(threshold=30)
