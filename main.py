@@ -72,7 +72,7 @@ def benchmark_best_SVM(data_set, mode='ovr'):
     X = data_set[:, :-1]
     y = np.array(data_set[:, -1], dtype=int)
 
-    clf = svm.SVC(kernel='rbf', C=1, tol=1e-3, probability=False, decision_function_shape=mode)
+    clf = svm.SVC(kernel='rbf', C=1, tol=1e-3, probability=True, decision_function_shape=mode)
     # clf.fit(X, y)
     # print('Model trained')
     print('Classifying')

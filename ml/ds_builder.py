@@ -96,18 +96,9 @@ def matches_details(matches, threshold=1):
 
     # Fetch info from all matches
     for match in matches:
-        import json
-        print(json.dumps(match))
         role = role_by_champion_id(match['champion'])
         for bs in match_stats:
-            value = search(match['participant'], bs)
-
-            # Ignore invalid games
-            # TODO: Build query properly to filter only SR ranked games
-            if value is None:
-                break
-            else:
-                value = int(value)
+            value = int(search(match['participant'], bs))
 
             if handle_stats[bs]['reduce'] == "disp":
                 stats[role][bs].append(value)
@@ -129,8 +120,7 @@ def matches_details(matches, threshold=1):
 
             else:
                 result += [np.sum(stats[role][bs])]
-    print(result)
-    dsa
+
     return result
 
 
@@ -255,5 +245,5 @@ def dataset_v2(skip=0):
     fill_missing_role_stats()
 
 # dataset_v2(0)
-dataset_v2(869)
+# dataset_v2(869)
 # fill_missing_role_stats(threshold=30)
