@@ -6,8 +6,8 @@ client = MongoClient()
 db = client['RUBoosted']
 
 def all_summoner_nicks(skip=0):
-    query = db['summoners'].aggregate(all_nicks(skip))
-    sums = query_to_list(query)
+    query = db['summoners'].aggregate(all_nicks())
+    sums = query_to_list(query)[skip:]
 
     return sums
 

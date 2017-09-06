@@ -77,7 +77,8 @@ def benchmark_best_SVM(data_set, mode='ovr'):
     # print('Model trained')
     print('Classifying')
     scores = cross_val_score(clf, X, y, cv=10)
-    print(max(scores), scores)
+    print(scores)
+    print(max(scores), np.average(scores))
 
 print('Reading file')
 df = pd.read_csv('ml/resources/pp_DS.tsv', sep='\t', index_col=False)

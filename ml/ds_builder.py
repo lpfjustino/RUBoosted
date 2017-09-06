@@ -10,9 +10,9 @@ from db import summoner as s
 # Parameters (REFACTOR!):
 resource_path = "resources/"
 roles_file = "roles/roles"
-pool_file = "pools/1_pool"
+pool_file = "pools/250_pool"
 dataset_file = "DS"
-full_base = False
+full_base = True
 
 script_path = os.path.dirname(__file__)
 filename = os.path.join(script_path, resource_path, roles_file + '.txt')
@@ -20,31 +20,32 @@ champ_roles = json.loads(open(filename, 'r').read())
 all_roles = np.unique([role['role'] for role in champ_roles])
 
 handle_stats = {
-    'goldEarned': {'reduce': 'disp', 'default':{'avg':0, 'var':0}},
-    'kills': {'reduce': 'disp', 'default':{'avg':0, 'var':0}},
-    'deaths': {'reduce': 'disp', 'default':{'avg':0, 'var':0}},
-    'assists': {'reduce': 'disp', 'default':{'avg':0, 'var':0}},
-    'totalDamageTaken': {'reduce': 'disp', 'default':{'avg':0, 'var':0}},
-    'totalMinionsKilled': {'reduce': 'disp', 'default':{'avg':0, 'var':0}},
-    'visionScore': {'reduce': 'disp', 'default':{'avg':0, 'var':0}},
-    'visionWardsBoughtInGame': {'reduce': 'disp', 'default':{'avg':0, 'var':0}},
-    'gameDuration': {'reduce': 'disp', 'default':{'avg':0, 'var':0}},
-    'won': {'reduce': 'sum', 'default':0},
-    'weight': {'reduce': 'sum', 'default':1},
+    'goldEarned': {'reduce': 'disp', 'default': {'avg': 0, 'var': 0}},
+    'kills': {'reduce': 'disp', 'default': {'avg': 0, 'var': 0}},
+    'deaths': {'reduce': 'disp', 'default': {'avg': 0, 'var': 0}},
+    'assists': {'reduce': 'disp', 'default': {'avg': 0, 'var': 0}},
+    'totalDamageTaken': {'reduce': 'disp', 'default': {'avg': 0, 'var': 0}},
+    'totalMinionsKilled': {'reduce': 'disp', 'default': {'avg': 0, 'var': 0}},
+    'visionScore': {'reduce': 'disp', 'default': {'avg': 0, 'var': 0}},
+    'visionWardsBoughtInGame': {'reduce': 'disp', 'default': {'avg': 0, 'var': 0}},
+    'gameDuration': {'reduce': 'disp', 'default': {'avg': 0, 'var': 0}},
+    'won': {'reduce': 'sum', 'default': 0},
+    'weight': {'reduce': 'sum', 'default': 1},
 }
 match_stats = list(handle_stats.keys())
-
 summarizations = ['avg', 'var']
 
+
 def tier_division(summoner_instance):
-    placements = [summoner_instance.soloq_tier, summoner_instance.soloq_division, \
-           summoner_instance.flex_tier, summoner_instance.flex_division]
+    placements = [summoner_instance.soloq_tier, summoner_instance.soloq_division, summoner_instance.flex_tier,
+                  summoner_instance.flex_division]
 
     for i, placement in enumerate(placements):
         if placement == None:
             placements[i] = ""
 
     return placements
+
 
 def role_by_champion_id(id):
     # Find champion's role
@@ -55,12 +56,14 @@ def role_by_champion_id(id):
 
     return role
 
+
 def combine_into_labels(prefix, sufix):
     labels = []
     for p in prefix:
         for s in sufix:
             labels.append(p + "_" + s)
     return labels
+
 
 def search(d, key, default=None):
     """Return a value corresponding to the specified key in the (possibly
@@ -79,7 +82,8 @@ def search(d, key, default=None):
             stack.pop()
     return default
 
-def matches_details(matches, threshold = 1):
+
+def matches_details(matches, threshold=1):
     # Initialize stats dicts with empty lists
     stats = dict()
     for r in all_roles:
@@ -92,9 +96,19 @@ def matches_details(matches, threshold = 1):
 
     # Fetch info from all matches
     for match in matches:
+        import json
+        print(json.dumps(match))
         role = role_by_champion_id(match['champion'])
         for bs in match_stats:
-            value = int(search(match['participant'], bs))
+            value = search(match['participant'], bs)
+
+            # Ignore invalid games
+            # TODO: Build query properly to filter only SR ranked games
+            if value is None:
+                break
+            else:
+                value = int(value)
+
             if handle_stats[bs]['reduce'] == "disp":
                 stats[role][bs].append(value)
             else:
@@ -115,11 +129,14 @@ def matches_details(matches, threshold = 1):
 
             else:
                 result += [np.sum(stats[role][bs])]
-
+    print(result)
+    dsa
     return result
+
 
 def get_n_matches(summoner_instance):
     return [len(summoner_instance.matches)]
+
 
 # New generic function to generate the dataset's header
 def generate_header():
@@ -132,21 +149,23 @@ def generate_header():
                 role_stat = combine_into_labels([role], sum_stat)
                 labels.append(role_stat)
             else:
-                labels.append(combine_into_labels([role],[stat]))
+                labels.append(combine_into_labels([role], [stat]))
 
     flattened = [val for sublist in labels for val in sublist]
 
     return flattened
 
+
 # Combine roles and stats names to get labels
-def get_labels(version='v2'):
+def get_labels():
     stats_labels = '\t'.join(generate_header())
     labels = 'nick\tn_matches\t' + stats_labels + '\tsolo_q_tier\tsolo_q_division\tflex_tier\tflex_division\n'
 
     return labels
 
+
 # Fills statistics with average for players that do not play some role
-def fill_missing_role_stats(threshold = 1):
+def fill_missing_role_stats(threshold=1):
     df = pd.read_csv(resource_path + dataset_file + '.tsv', sep='\t', index_col=False)
 
     for role in all_roles:
@@ -163,11 +182,11 @@ def fill_missing_role_stats(threshold = 1):
         stats_features = combine_into_labels(stats_features, to_be_postprocessed)
 
         # The average is weighted by how many games the player has played in that role
-        weights = df.loc[role_played,weight_feature].values.flatten()
+        weights = df.loc[role_played, weight_feature].values.flatten()
 
         for s_feat in stats_features:
             if len(weights) > 0:
-                feature_avg = np.average(df.loc[role_played,s_feat].as_matrix(), weights=weights)
+                feature_avg = np.average(df.loc[role_played, s_feat].as_matrix(), weights=weights)
             else:
                 feature_avg = 0
 
@@ -185,6 +204,7 @@ def fill_missing_role_stats(threshold = 1):
             final.write("%s\t" % feature)
         final.write("\n")
 
+
 def dataset_v2(skip=0):
     failed = []
     print('Building begun')
@@ -200,6 +220,8 @@ def dataset_v2(skip=0):
     else:
         f = open(resource_path + pool_file + '.txt')
         players = [x.replace('\n', '') for x in f.readlines()]
+
+    print('Players read')
 
     for i, sum in enumerate(players):
         start_read_time = time.time()
@@ -233,4 +255,5 @@ def dataset_v2(skip=0):
     fill_missing_role_stats()
 
 # dataset_v2(0)
+dataset_v2(869)
 # fill_missing_role_stats(threshold=30)

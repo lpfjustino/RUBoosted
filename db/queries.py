@@ -69,7 +69,7 @@ all_summoners = [
         },
     ]
 
-def all_nicks(skip=0):
+def all_nicks():
     return [
         { "$project": {"_id":0, "nick":1} },
         { "$group": { "_id": "$nick" } }
@@ -137,6 +137,10 @@ def all_joined_summoners(nick):
                 }
             }
         },
+        # Season 7 assertion
+        { '$match': {'sumMatches.seasonId':8}},
+        # TODO: Use this to keep only ranked games
+        #{'$match': {'sumMatches.queueId': {'$in': [410, 420, 440]}}},
         # Compute the participants field
         {
             '$project': {
