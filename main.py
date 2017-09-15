@@ -6,25 +6,24 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neural_network import MLPClassifier
 from ml import preprocessor as pp
 from tools import visualization as v
-from ml.ds_builder import combine_into_labels, all_roles
 
+data_set_file = 'ml/resources/working/pp_DS.tsv'
 
 def visualize(df, chosen):
     print(df[:,chosen[1,8]])
     v.show_2d(df, chosen[[1,7,19]])
     v.show_2d(df, chosen[[2,3,4]])
-    dsa
     # v.show_3d(data_set[:,:])
 
 def benchmark(data_set):
     X = data_set[:, :-1]
     y = data_set[:, -1]
 
-    mlp = MLPClassifier(hidden_layer_sizes=(3,), max_iter=10, alpha=1e-4,
-                        solver='sgd', verbose=0, tol=1e-4, random_state=1,
-                        learning_rate_init=.1)
+    mlp = MLPClassifier(hidden_layer_sizes=(300,10), max_iter=1000, alpha=1e-4,
+                        solver='sgd', verbose=0, tol=1e-5, random_state=1,
+                        learning_rate_init=.2)
     mlp.fit(X, y)
-    scores = cross_val_score(mlp, X, y, cv=5)
+    scores = cross_val_score(mlp, X, y, cv=10)
 
     clf = svm.SVC(kernel='linear', C=1)
     clf.fit(X, y)
@@ -42,20 +41,26 @@ def benchmark_SVM(data_set, mode='ovo'):
     X = data_set[:, :-1]
     y = data_set[:, -1]
 
-    for i in range(5):
-        clf = svm.SVC(kernel='linear', C=1, degree=i, tol=1e-3, verbose=False, decision_function_shape=mode)
-        clf.fit(X, y)
-        scores = cross_val_score(clf, X, y, cv=10)
+    # for i in range(5):
+    #     clf = svm.SVC(kernel='linear', C=1, degree=i, tol=1e-3, verbose=False, decision_function_shape=mode)
+    #     clf.fit(X, y)
+    #     scores = cross_val_score(clf, X, y, cv=10)
+    #
+    #     print('Degree:',i, max(scores), scores)
 
-        print('Degree:',i, max(scores), scores)
+    clf = svm.SVC(kernel='linear', C=1, degree=5, tol=1e-3, verbose=False, decision_function_shape=mode)
+    clf.fit(X, y)
+    scores = cross_val_score(clf, X, y, cv=10)
 
-    clf = svm.SVC(kernel='poly', C=1, tol=1e-3, probability=True, decision_function_shape=mode)
+    print('Degree 5:', max(scores), scores)
+
+    clf = svm.SVC(kernel='poly', C=1, tol=1e-3, probability=False, decision_function_shape=mode)
     clf.fit(X, y)
     scores = cross_val_score(clf, X, y, cv=10)
 
     print("Poly:", max(scores), scores)
 
-    clf = svm.SVC(kernel='sigmoid', C=1, tol=1e-3, probability=True, decision_function_shape=mode)
+    clf = svm.SVC(kernel='sigmoid', C=1, tol=1e-3, probability=False, decision_function_shape=mode)
     clf.fit(X, y)
     scores = cross_val_score(clf, X, y, cv=10)
 
@@ -72,7 +77,7 @@ def benchmark_best_SVM(data_set, mode='ovr'):
     X = data_set[:, :-1]
     y = np.array(data_set[:, -1], dtype=int)
 
-    clf = svm.SVC(kernel='rbf', C=1, tol=1e-3, probability=True, decision_function_shape=mode)
+    clf = svm.SVC(kernel='rbf', C=1, tol=1e-3, probability=False, decision_function_shape=mode)
     # clf.fit(X, y)
     # print('Model trained')
     print('Classifying')
@@ -81,7 +86,7 @@ def benchmark_best_SVM(data_set, mode='ovr'):
     print(max(scores), np.average(scores))
 
 print('Reading file')
-df = pd.read_csv('ml/resources/pp_DS.tsv', sep='\t', index_col=False)
+df = pd.read_csv(data_set_file, sep='\t', index_col=False)
 print('File read')
 features = list(df)
 
@@ -93,16 +98,15 @@ data_set, df = pp.preprocess(df, 4, features, chosen)
 print('Preprocessed')
 # visualize(df, chosen)
 
-# chosen = np.array(['n_matches', 'kda', 'dmg', 'win_rate', 'var_kda', 'var_dmg', 'var_wr', 'kurt_kda', 'kurt_dmg', 'kurt_wr',
-#                    'skew_kda', 'skew_dmg', 'skew_wr', 'solo_q_tier'])
-# data_set, df = pp.preprocess(df, 4, features, chosen)
+benchmark(data_set)
 # print('\tOVR:')
 # benchmark_SVM(data_set, 'ovr')
 # print('\tOVO:')
 # benchmark_SVM(data_set, 'ovo')
 # print('\tBest SVM')
-print('Training model')
-benchmark_best_SVM(data_set)
+
+# print('Training model')
+# benchmark_best_SVM(data_set)
 
 # Initializing statistics fetcher
 # sf = stf.StatisticsFetcher(verbose=True)

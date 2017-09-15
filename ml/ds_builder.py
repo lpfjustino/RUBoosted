@@ -11,12 +11,13 @@ from db import summoner as s
 resource_path = "resources/"
 roles_file = "roles/roles"
 pool_file = "pools/250_pool"
-dataset_file = "DS"
+dataset_file = "working/DS"
+postprocessed_dataset_file = "working/pp_DS"
 full_base = True
 
 script_path = os.path.dirname(__file__)
-filename = os.path.join(script_path, resource_path, roles_file + '.txt')
-champ_roles = json.loads(open(filename, 'r').read())
+roles_file_name = os.path.join(script_path, resource_path, roles_file + '.txt')
+champ_roles = json.loads(open(roles_file_name, 'r').read())
 all_roles = np.unique([role['role'] for role in champ_roles])
 
 handle_stats = {
@@ -195,6 +196,28 @@ def fill_missing_role_stats(threshold=1):
         final.write("\n")
 
 
+# Removes examples with missing statistics
+def remove_missing_role_stats(threshold=1):
+    df = pd.read_csv(resource_path + dataset_file + '.tsv', sep='\t', index_col=False)
+
+    weight_features = combine_into_labels(all_roles, ['weight'])
+    role_not_played = ((df.loc[:, weight_features] <= threshold).transpose().any()).values.flatten()
+    print('Removed:', role_not_played.sum(), '/', len(role_not_played))
+    role_played = ((df.loc[:, weight_features] > threshold).transpose().any()).values.flatten()
+
+    df = df.loc[role_played, :]
+
+    final = open(resource_path + postprocessed_dataset_file + '.tsv', 'w', encoding="utf8")
+
+    # Copy header
+    final.write("\t".join(list(df.columns.values)))
+    final.write('\n')
+
+    for index, row in df.iterrows():
+        for feature in row.as_matrix():
+            final.write("%s\t" % feature)
+        final.write("\n")
+
 def dataset_v2(skip=0):
     failed = []
     print('Building begun')
@@ -247,3 +270,5 @@ def dataset_v2(skip=0):
 # dataset_v2(0)
 # dataset_v2(869)
 # fill_missing_role_stats(threshold=30)
+
+remove_missing_role_stats()
