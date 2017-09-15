@@ -203,7 +203,7 @@ def remove_missing_role_stats(threshold=1):
     weight_features = combine_into_labels(all_roles, ['weight'])
     role_not_played = ((df.loc[:, weight_features] <= threshold).transpose().any()).values.flatten()
     print('Removed:', role_not_played.sum(), '/', len(role_not_played))
-    role_played = ((df.loc[:, weight_features] > threshold).transpose().any()).values.flatten()
+    role_played = ((df.loc[:, weight_features] > threshold).transpose().all())
 
     df = df.loc[role_played, :]
 

@@ -98,15 +98,15 @@ data_set, df = pp.preprocess(df, 4, features, chosen)
 print('Preprocessed')
 # visualize(df, chosen)
 
-benchmark(data_set)
+# benchmark(data_set)
 # print('\tOVR:')
 # benchmark_SVM(data_set, 'ovr')
 # print('\tOVO:')
 # benchmark_SVM(data_set, 'ovo')
 # print('\tBest SVM')
 
-# print('Training model')
-# benchmark_best_SVM(data_set)
+print('Training model')
+benchmark_best_SVM(data_set)
 
 # Initializing statistics fetcher
 # sf = stf.StatisticsFetcher(verbose=True)
