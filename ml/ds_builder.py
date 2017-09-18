@@ -7,15 +7,16 @@ import os.path
 from db import db_manager as dbm
 from db import summoner as s
 
+script_path = os.path.dirname(__file__)
+
 # Parameters (REFACTOR!):
-resource_path = "resources/"
-roles_file = "roles/roles"
-pool_file = "pools/250_pool"
-dataset_file = "working/DS"
-postprocessed_dataset_file = "working/pp_DS"
+resource_path = script_path + "/" + "resources/"
+roles_file = "roles/roles3"
+pool_file = "pools/10_pool"
+dataset_file = "DS"
+postprocessed_dataset_file = "pp_DS"
 full_base = True
 
-script_path = os.path.dirname(__file__)
 roles_file_name = os.path.join(script_path, resource_path, roles_file + '.txt')
 champ_roles = json.loads(open(roles_file_name, 'r').read())
 all_roles = np.unique([role['role'] for role in champ_roles])
@@ -235,6 +236,7 @@ def dataset_v2(skip=0):
         players = [x.replace('\n', '') for x in f.readlines()]
 
     print('Players read')
+    print('Base size:', len(players))
 
     for i, sum in enumerate(players):
         start_read_time = time.time()
@@ -251,8 +253,6 @@ def dataset_v2(skip=0):
 
         # nick
         example += [summoner_instance.nick]
-        # n_matches
-        example += get_n_matches(summoner_instance)
         # match stats
         example += matches_details(summoner_instance.matches)
         # solo_q_tier, solo_q_division, flex_tier, flex_division
@@ -269,6 +269,5 @@ def dataset_v2(skip=0):
 
 # dataset_v2(0)
 # dataset_v2(869)
-# fill_missing_role_stats(threshold=30)
-
-remove_missing_role_stats()
+fill_missing_role_stats(threshold=1)
+# remove_missing_role_stats()

@@ -7,7 +7,7 @@ from sklearn.neural_network import MLPClassifier
 from ml import preprocessor as pp
 from tools import visualization as v
 
-data_set_file = 'ml/resources/working/pp_DS.tsv'
+data_set_file = 'ml/resources/pp_DS.tsv'
 
 def visualize(df, chosen):
     print(df[:,chosen[1,8]])
