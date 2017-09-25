@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from sklearn import svm
-from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import cross_val_score, GridSearchCV
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neural_network import MLPClassifier
 from ml import preprocessor as pp
@@ -85,6 +85,22 @@ def benchmark_best_SVM(data_set, mode='ovr'):
     print(scores)
     print(max(scores), np.average(scores))
 
+def tune_SVM(data_set):
+    X = data_set[:, :-1]
+    y = np.array(data_set[:, -1], dtype=int)
+
+    # Cs = [0.001, 0.01, 0.1, 1, 10, 100, 1000]
+    # gammas = [0.001, 0.01, 0.1, 1]
+    # shapes = ['ovo', 'ovr']
+    Cs = [0.001, 0.01, 0.1, 1, 5, 10, 15, 20]
+    gammas = [0.001, 0.025, 0.005, 0.075, 0.01]
+    shapes = ['ovo']
+    param_grid = {'C': Cs, 'gamma': gammas, 'decision_function_shape': shapes}
+    grid_search = GridSearchCV(svm.SVC(kernel='rbf'), param_grid, cv=10, verbose=True)
+    grid_search.fit(X, y)
+    print(grid_search.best_params_)
+    print(grid_search.best_score_)
+
 print('Reading file')
 df = pd.read_csv(data_set_file, sep='\t', index_col=False)
 print('File read')
@@ -105,8 +121,8 @@ print('Preprocessed')
 # benchmark_SVM(data_set, 'ovo')
 # print('\tBest SVM')
 
-print('Training model')
-benchmark_best_SVM(data_set)
+# print('Training model')
+# benchmark_best_SVM(data_set)
 
 # Initializing statistics fetcher
 # sf = stf.StatisticsFetcher(verbose=True)
@@ -116,3 +132,5 @@ benchmark_best_SVM(data_set)
 
 # Build cache starting from args
 # sf.cache_all_summoners(sys.argv[2])
+
+tune_SVM(data_set)

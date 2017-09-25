@@ -10,8 +10,8 @@ from db import summoner as s
 script_path = os.path.dirname(__file__)
 
 # Parameters (REFACTOR!):
-resource_path = script_path + "/" + "resources/"
-roles_file = "roles/roles3"
+resource_path = script_path + "/resources/"
+roles_file = "roles/roles"
 pool_file = "pools/10_pool"
 dataset_file = "DS"
 postprocessed_dataset_file = "pp_DS"
@@ -43,7 +43,7 @@ def tier_division(summoner_instance):
                   summoner_instance.flex_division]
 
     for i, placement in enumerate(placements):
-        if placement == None:
+        if placement is None:
             placements[i] = ""
 
     return placements
@@ -151,7 +151,7 @@ def generate_header():
 # Combine roles and stats names to get labels
 def get_labels():
     stats_labels = '\t'.join(generate_header())
-    labels = 'nick\tn_matches\t' + stats_labels + '\tsolo_q_tier\tsolo_q_division\tflex_tier\tflex_division\n'
+    labels = 'nick\t' + stats_labels + '\tsolo_q_tier\tsolo_q_division\tflex_tier\tflex_division\n'
 
     return labels
 
