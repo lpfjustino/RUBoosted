@@ -13,8 +13,8 @@ script_path = os.path.dirname(__file__)
 resource_path = script_path + "/resources/"
 roles_file = "roles/roles"
 pool_file = "pools/10_pool"
-dataset_file = "DS"
-postprocessed_dataset_file = "pp_DS"
+dataset_file = "datasets/working/DS"
+postprocessed_dataset_file = "datasets/working/pp_DS"
 full_base = True
 
 roles_file_name = os.path.join(script_path, resource_path, roles_file + '.txt')
@@ -269,5 +269,5 @@ def dataset_v2(skip=0):
 
 # dataset_v2(0)
 # dataset_v2(869)
-fill_missing_role_stats(threshold=1)
+# fill_missing_role_stats(threshold=1)
 # remove_missing_role_stats()
