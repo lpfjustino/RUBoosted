@@ -1,0 +1,5 @@
+bfg.jar
+.idea
+.idea/*
+**/__pycache__
+ml/resources/datasets/all_champs
