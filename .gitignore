@@ -3,3 +3,4 @@ bfg.jar
 .idea/*
 **/__pycache__
 ml/resources/datasets/all_champs
+*.pyc
