@@ -37,47 +37,11 @@ def benchmark(data_set):
     print('SVM: ', scores2)
     print('KNN: ', scores3)
 
-def benchmark_SVM(data_set, mode='ovo'):
-    X = data_set[:, :-1]
-    y = data_set[:, -1]
-
-    # for i in range(5):
-    #     clf = svm.SVC(kernel='linear', C=1, degree=i, tol=1e-3, verbose=False, decision_function_shape=mode)
-    #     clf.fit(X, y)
-    #     scores = cross_val_score(clf, X, y, cv=10)
-    #
-    #     print('Degree:',i, max(scores), scores)
-
-    clf = svm.SVC(kernel='linear', C=1, degree=5, tol=1e-3, verbose=False, decision_function_shape=mode)
-    clf.fit(X, y)
-    scores = cross_val_score(clf, X, y, cv=10)
-
-    print('Degree 5:', max(scores), scores)
-
-    clf = svm.SVC(kernel='poly', C=1, tol=1e-3, probability=False, decision_function_shape=mode)
-    clf.fit(X, y)
-    scores = cross_val_score(clf, X, y, cv=10)
-
-    print("Poly:", max(scores), scores)
-
-    clf = svm.SVC(kernel='sigmoid', C=1, tol=1e-3, probability=False, decision_function_shape=mode)
-    clf.fit(X, y)
-    scores = cross_val_score(clf, X, y, cv=10)
-
-    print("Sigmoid:", max(scores), scores)
-
-    # Cs = np.linspace(1e-2, 1, num=20)
-    # for c in Cs:
-    #     clf = svm.SVC(kernel='rbf', C=c, tol=1e-3, probability=True, decision_function_shape='ovr')
-    #     clf.fit(X, y)
-    #     scores = cross_val_score(clf, X, y, cv=10)
-    #     print('Radial', c, max(scores))
-
 def benchmark_best_SVM(data_set, mode='ovo'):
     X = data_set[:, :-1]
     y = np.array(data_set[:, -1], dtype=int)
 
-    clf = svm.SVC(kernel='rbf', C=25, gamma=0.001, tol=1e-3, probability=False, decision_function_shape=mode)
+    clf = svm.SVC(kernel='rbf', C=30, gamma=0.001, tol=1e-3, probability=False, decision_function_shape=mode)
     print('Classifying')
     scores = cross_val_score(clf, X, y, cv=10)
     print(scores)
@@ -87,11 +51,11 @@ def tune_SVM(data_set):
     X = data_set[:, :-1]
     y = np.array(data_set[:, -1], dtype=int)
 
-    # Cs = [0.001, 0.01, 0.1, 1, 5, 10, 15, 20, 100, 1000]
-    # gammas = [0.001, 0.025, 0.005, 0.075, 0.01, 0.1, 1]
+    # Cs = [0.001, 0.01, 0.1, 1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 100, 1000]
+    # gammas = [0.0001, 0.0025, 0.005, 0.0075, 0.001, 0.025, 0.005, 0.075, 0.01, 0.1, 1]
     # shapes = ['ovo', 'ovr']
-    Cs = [20, 25, 30, 35, 40, 45, 50]
-    gammas = [0.0001, 0.0025, 0.005, 0.0075, 0.001]
+    Cs = [25, 27, 30, 33, 35]
+    gammas = [0.0075, 0.008, 0.0085, 0.009, 0.0095, 0.001]
     shapes = ['ovo']
     param_grid = {'C': Cs, 'gamma': gammas, 'decision_function_shape': shapes}
     grid_search = GridSearchCV(svm.SVC(kernel='rbf'), param_grid, cv=10, verbose=True)
@@ -119,8 +83,8 @@ print('Preprocessed')
 # benchmark_SVM(data_set, 'ovo')
 # print('\tBest SVM')
 
-# print('Training model')
-# benchmark_best_SVM(data_set)
+print('Training model')
+benchmark_best_SVM(data_set)
 
 # Initializing statistics fetcher
 # sf = stf.StatisticsFetcher(verbose=True)
@@ -131,4 +95,4 @@ print('Preprocessed')
 # Build cache starting from args
 # sf.cache_all_summoners(sys.argv[2])
 
-tune_SVM(data_set)
+# tune_SVM(data_set)
