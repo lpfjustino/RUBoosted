@@ -309,17 +309,17 @@ def split_dataset(threshold=50):
             all_stats = combine_into_labels([sum], disp_stats)
             for stat in all_stats:
                 role_stat = combine_into_labels(champs_in_role, [stat])
-                df1 = df.loc[relevant_players, role_stat]
-                df2 = df.loc[relevant_players, weight_features]
+                stat_with_champs = df.loc[relevant_players, role_stat]
+                weights_with_champs = df.loc[relevant_players, weight_features]
 
                 # Calculate weighted average for every player
                 i = 0
-                for index, row in df1.iterrows():
-                    stat_with_champs = row.as_matrix()
-                    weights_with_champs = df2.iloc[i,:].as_matrix()
-                    norm = np.sum(weights_with_champs)
+                for index, row in stat_with_champs.iterrows():
+                    player_stat_with_champs = row.as_matrix()
+                    player_weights_with_champs = weights_with_champs.iloc[i,:].as_matrix()
+                    norm = np.sum(player_weights_with_champs)
 
-                    average = np.sum(stat_with_champs * weights_with_champs) / norm
+                    average = np.sum(player_stat_with_champs * player_weights_with_champs) / norm
                     new_ds[i, j] = average
                     i += 1
                 j += 1
@@ -327,17 +327,17 @@ def split_dataset(threshold=50):
         # Compute new dataset for other attributes
         for stat in other_stats:
             role_stat = combine_into_labels(champs_in_role, [stat])
-            df1 = df.loc[relevant_players, role_stat]
-            df2 = df.loc[relevant_players, weight_features]
+            stat_with_champs = df.loc[relevant_players, role_stat]
+            weights_with_champs = df.loc[relevant_players, weight_features]
 
             # Calculate weighted average for every player
             i = 0
-            for index, row in df1.iterrows():
-                stat_with_champs = row.as_matrix()
-                weights_with_champs = df2.iloc[i,:].as_matrix()
-                norm = np.sum(weights_with_champs)
+            for index, row in stat_with_champs.iterrows():
+                player_stat_with_champs = row.as_matrix()
+                player_weights_with_champs = weights_with_champs.iloc[i,:].as_matrix()
+                norm = np.sum(player_weights_with_champs)
 
-                average = np.sum(stat_with_champs * weights_with_champs) / norm
+                average = np.sum(player_stat_with_champs * player_weights_with_champs) / norm
                 new_ds[i, j] = average
                 i += 1
             j += 1
