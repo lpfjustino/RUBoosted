@@ -223,8 +223,7 @@ def remove_missing_role_stats(threshold=1):
             final.write("%s\t" % feature)
         final.write("\n")
 
-def get_players():
-    failed = []
+def get_players(skip):
     print('Building begun')
 
     if skip == 0:
@@ -239,10 +238,11 @@ def get_players():
         f = open(resource_path + pool_file + '.txt')
         players = [x.replace('\n', '') for x in f.readlines()]
 
-    return players
+    return ds, players
 
 def dataset_v2(skip=0):
-    players = get_players()
+    failed = []
+    ds, players = get_players(skip)
     print('Players read')
     print('Base size:', len(players))
 
