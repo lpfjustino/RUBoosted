@@ -301,6 +301,7 @@ def split_dataset(threshold=50):
 
         players_pool_size = len(df.loc[relevant_players,:])
         new_features = combine_into_labels(summarizations, disp_stats) + other_stats
+        placement_features = ['solo_q_tier', 'solo_q_division', 'flex_tier', 'flex_division']
         new_ds = np.zeros((players_pool_size, len(new_features)))
 
         # Computes new dataset for dispersion based attributes
@@ -343,15 +344,19 @@ def split_dataset(threshold=50):
             j += 1
 
         # Open new file
-        f = open(resource_path + 'datasets/all_champs/split/' + role + '_DS.tsv', 'w')
-        f.write('\t'.join(new_features))
-        f.write('\n')
+        new_ds_file = open(resource_path + 'datasets/all_champs/split/' + role + '_DS.tsv', 'w')
+        new_ds_file.write('\t'.join(new_features + placement_features))
+        new_ds_file.write('\n')
 
         # Write dataset to new file
-        for row in new_ds:
+        for n, row in enumerate(new_ds):
             for col in row:
-                f.write(str(col) + '\t')
-            f.write('\n')
+                new_ds_file.write(str(col) + '\t')
+
+            elos = list(df.loc[n, placement_features])
+            elos = ["" if elo is np.NaN else elo for elo in elos]
+            new_ds_file.write('\t'.join(elos))
+            new_ds_file.write('\n')
 
 split_dataset()
 # dataset_v2(0)
