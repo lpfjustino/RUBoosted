@@ -358,7 +358,7 @@ def split_dataset(threshold=50):
             new_ds_file.write('\t'.join(elos))
             new_ds_file.write('\n')
 
-split_dataset()
+# split_dataset()
 # dataset_v2(0)
 # dataset_v2(869)
 # fill_missing_role_stats(threshold=1)

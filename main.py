@@ -1,13 +1,17 @@
 import numpy as np
 import pandas as pd
+from scipy.sparse.linalg.eigen.arpack._arpack import dsaupd
 from sklearn import svm
 from sklearn.model_selection import cross_val_score, GridSearchCV
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neural_network import MLPClassifier
 from ml import preprocessor as pp
 from tools import visualization as v
+from ml import ds_builder as ds
 
 data_set_file = 'ml/resources/datasets/working/pp_DS.tsv'
+split_datasets_folder = 'ml/resources/datasets/all_champs/split/'
+split_datasets_names = ds.combine_into_labels(ds.all_riot_roles, ['DS.tsv'])
 
 def visualize(df, chosen):
     print(df[:,chosen[1,8]])
@@ -63,28 +67,20 @@ def tune_SVM(data_set):
     print(grid_search.best_params_)
     print(grid_search.best_score_)
 
-print('Reading file')
-df = pd.read_csv(data_set_file, sep='\t', index_col=False)
-print('File read')
-features = list(df)
+for ds in split_datasets_names:
+    data_set_file = split_datasets_folder + ds
 
-# Ignoring nick, flex elo and divisions
-chosen = list(df.iloc[:,1:-3].columns.values)
+    print(ds)
+    df = pd.read_csv(data_set_file, sep='\t', index_col=False)
+    features = list(df)
 
-print('Preprocessing')
-data_set, df = pp.preprocess(df, 4, features, chosen)
-print('Preprocessed')
-# visualize(df, chosen)
+    # Ignoring nick, flex elo and divisions
+    chosen = list(df.iloc[:,:-3].columns.values)
 
-# benchmark(data_set)
-# print('\tOVR:')
-# benchmark_SVM(data_set, 'ovr')
-# print('\tOVO:')
-# benchmark_SVM(data_set, 'ovo')
-# print('\tBest SVM')
+    data_set, df = pp.preprocess(df, 4, features, chosen)
+    # visualize(df, chosen)
 
-print('Training model')
-benchmark_best_SVM(data_set)
+    benchmark_best_SVM(data_set)
 
 # Initializing statistics fetcher
 # sf = stf.StatisticsFetcher(verbose=True)
