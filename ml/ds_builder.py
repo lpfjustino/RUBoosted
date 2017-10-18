@@ -31,6 +31,7 @@ handle_stats = {
     'deaths': {'reduce': 'disp', 'default': {'avg': 0, 'var': 0}},
     'assists': {'reduce': 'disp', 'default': {'avg': 0, 'var': 0}},
     'totalDamageTaken': {'reduce': 'disp', 'default': {'avg': 0, 'var': 0}},
+    'totalDamageDealt': {'reduce': 'disp', 'default': {'avg': 0, 'var': 0}},
     'totalMinionsKilled': {'reduce': 'disp', 'default': {'avg': 0, 'var': 0}},
     'visionScore': {'reduce': 'disp', 'default': {'avg': 0, 'var': 0}},
     'visionWardsBoughtInGame': {'reduce': 'disp', 'default': {'avg': 0, 'var': 0}},
@@ -344,7 +345,7 @@ def split_dataset(threshold=50):
             j += 1
 
         # Open new file
-        new_ds_file = open(resource_path + 'datasets/all_champs/split/' + role + '_DS.tsv', 'w')
+        new_ds_file = open(resource_path + 'datasets/all_champs/split/' + str(threshold) + '/' + role + '_DS.tsv', 'w')
         new_ds_file.write('\t'.join(new_features + placement_features))
         new_ds_file.write('\n')
 
@@ -357,6 +358,10 @@ def split_dataset(threshold=50):
             elos = ["" if elo is np.NaN else elo for elo in elos]
             new_ds_file.write('\t'.join(elos))
             new_ds_file.write('\n')
+
+# thresholds = [10*(x+1) for x in range(10)]
+# for threshold in thresholds:
+#     split_dataset(threshold)
 
 # split_dataset()
 # dataset_v2(0)

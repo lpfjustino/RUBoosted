@@ -41,14 +41,27 @@ def benchmark(data_set):
     print('SVM: ', scores2)
     print('KNN: ', scores3)
 
+def benchmark_knn(data_set):
+    X = data_set[:, :-1]
+    y = data_set[:, -1]
+
+    knn = KNeighborsClassifier(n_neighbors=1, weights='distance')
+    knn.fit(X, y)
+    scores = cross_val_score(knn, X, y, cv=5)
+
+    knn2 = KNeighborsClassifier(n_neighbors=3, weights='distance')
+    knn2.fit(X, y)
+    scores2 = cross_val_score(knn2, X, y, cv=5)
+
+    print('KNN: ', scores)
+    print('KNN: ', scores2)
+
 def benchmark_best_SVM(data_set, mode='ovo'):
     X = data_set[:, :-1]
     y = np.array(data_set[:, -1], dtype=int)
 
     clf = svm.SVC(kernel='rbf', C=30, gamma=0.001, tol=1e-3, probability=False, decision_function_shape=mode)
-    print('Classifying')
     scores = cross_val_score(clf, X, y, cv=10)
-    print(scores)
     print(max(scores), np.average(scores))
 
 def tune_SVM(data_set):
@@ -67,20 +80,43 @@ def tune_SVM(data_set):
     print(grid_search.best_params_)
     print(grid_search.best_score_)
 
-for ds in split_datasets_names:
-    data_set_file = split_datasets_folder + ds
+def benchmark_ensemble():
+    for pool in range(10):
+        print('>', (pool+1)*10)
+        pool_description = str((pool+1)*10) + '/'
+        for ds in split_datasets_names:
+            data_set_file = split_datasets_folder + pool_description + ds
 
-    print(ds)
+            print(ds)
+            df = pd.read_csv(data_set_file, sep='\t', index_col=False)
+            features = list(df)
+
+            # Ignoring nick, flex elo and divisions
+            chosen = list(df.iloc[:,:-3].columns.values)
+
+            data_set, df = pp.preprocess(df, 4, features, chosen)
+            # visualize(df, chosen)
+
+            benchmark_best_SVM(data_set)
+
+def run():
+    print('Reading file')
     df = pd.read_csv(data_set_file, sep='\t', index_col=False)
+    print('File read')
     features = list(df)
 
     # Ignoring nick, flex elo and divisions
-    chosen = list(df.iloc[:,:-3].columns.values)
+    chosen = list(df.iloc[:, 1:-3].columns.values)
 
+    print('Preprocessing')
     data_set, df = pp.preprocess(df, 4, features, chosen)
-    # visualize(df, chosen)
+    print('Preprocessed')
 
+    print('Training model')
     benchmark_best_SVM(data_set)
+
+# run()
+
 
 # Initializing statistics fetcher
 # sf = stf.StatisticsFetcher(verbose=True)
@@ -92,3 +128,8 @@ for ds in split_datasets_names:
 # sf.cache_all_summoners(sys.argv[2])
 
 # tune_SVM(data_set)
+
+# Attempt to use knn
+# benchmark_knn(data_set)
+
+
