@@ -14,8 +14,10 @@ resource_path = script_path + "/resources/"
 champ_roles_file = "roles/champ_role"
 riot_roles_file = "roles/riot_roles"
 pool_file = "pools/10_pool"
-dataset_file = "datasets/all_champs/DS"
-postprocessed_dataset_file = "datasets/working/pp_DS"
+dataset_file = "datasets/full/DS"
+standardized_dataset_file = "datasets/full/standardized_DS"
+postprocessed_dataset_file = "datasets/full/pp_DS"
+standardized_postprocessed_dataset_file = "datasets/full/pp_standardized_DS"
 full_base = True
 
 champ_roles_file_name = os.path.join(script_path, resource_path, champ_roles_file + '.txt')
@@ -162,10 +164,13 @@ def get_labels():
 
 
 # Fills statistics with average for players that do not play some role
-def fill_missing_role_stats(threshold=1):
-    df = pd.read_csv(resource_path + dataset_file + '.tsv', sep='\t', index_col=False)
+def fill_missing_role_stats(threshold=1, standardized=False):
+    if standardized:
+        df = pd.read_csv(resource_path + standardized_dataset_file + '.tsv', sep='\t', index_col=False)
+    else:
+        df = pd.read_csv(resource_path + dataset_file + '.tsv', sep='\t', index_col=False)
 
-    for role in all_champ_roles:
+    for role in all_riot_roles:
         weight_feature = combine_into_labels([role], ['weight'])
 
         # Computes players that plays or not those champ_roles
@@ -190,7 +195,7 @@ def fill_missing_role_stats(threshold=1):
             # Replacing by average
             df.loc[role_not_played, s_feat] = feature_avg
 
-    final = open(resource_path + "pp_" + dataset_file + '.tsv', 'w', encoding="utf8")
+    final = open(resource_path + standardized_postprocessed_dataset_file + '.tsv', 'w', encoding="utf8")
 
     # Copy header
     final.write("\t".join(list(df.columns.values)))
@@ -274,7 +279,6 @@ def dataset_v2(skip=0):
 
     ds.close()
     print("The following summoners failed: ", failed)
-    fill_missing_role_stats()
 
 def split_dataset(threshold=50):
     df = pd.read_csv(resource_path + dataset_file + '.tsv', sep='\t', index_col=False)
@@ -285,12 +289,9 @@ def split_dataset(threshold=50):
 
         # Computes dispersion statistics features (with mean and average)
         disp_stats = [stat for stat in handle_stats if handle_stats[stat]['reduce'] == 'disp']
-                    # disp_stats_features = combine_into_labels(champs_in_role, summarizations)
-                    # disp_stats_features = combine_into_labels(disp_stats_features, disp_stats)
 
         # Compute other statistics features
         other_stats = [stat for stat in handle_stats if handle_stats[stat]['reduce'] != 'disp']
-                    # other_stats_features = combine_into_labels(champs_in_role, other_stats)
 
 
         # Filter players above the threshold
@@ -359,12 +360,108 @@ def split_dataset(threshold=50):
             new_ds_file.write('\t'.join(elos))
             new_ds_file.write('\n')
 
+def standardize_dataset():
+    df = pd.read_csv(resource_path + dataset_file + '.tsv', sep='\t', index_col=False)
+
+    # Computes dispersion statistics features (with mean and average)
+    disp_stats = [stat for stat in handle_stats if handle_stats[stat]['reduce'] == 'disp']
+
+    # Compute other statistics features
+    other_stats = [stat for stat in handle_stats if handle_stats[stat]['reduce'] != 'disp']
+
+    new_features = combine_into_labels(summarizations, disp_stats) + other_stats
+    all_new_features = combine_into_labels(all_riot_roles, new_features)
+    placement_features = ['solo_q_tier', 'solo_q_division', 'flex_tier', 'flex_division']
+
+    players_pool_size = len(df.loc[:,:])
+    n_roles = len(all_riot_roles)
+    n_features = len(new_features)
+    n_total_features = n_roles * n_features
+
+    new_ds = np.zeros((players_pool_size, n_total_features))
+
+    for offset, role in enumerate(all_riot_roles):
+        # Filter champions in a given role
+        champs_in_role = [champ['key'] for champ in riot_roles if champ['role'] == role]
+
+        # Filter players above the threshold
+        weight_features = []
+        for champ in champs_in_role:
+            weight_features.append(champ + '_weight')
+
+        # Computes new dataset for dispersion based attributes
+        j = 0
+        for sum in summarizations:
+            all_stats = combine_into_labels([sum], disp_stats)
+            for stat in all_stats:
+                role_stat = combine_into_labels(champs_in_role, [stat])
+                stat_with_champs = df.loc[:, role_stat]
+                weights_with_champs = df.loc[:, weight_features]
+
+                # Calculate weighted average for every player
+                i = 0
+                for index, row in stat_with_champs.iterrows():
+                    player_stat_with_champs = row.as_matrix()
+                    player_weights_with_champs = weights_with_champs.iloc[i,:].as_matrix()
+                    norm = np.sum(player_weights_with_champs)
+
+                    if norm != 0:
+                        average = np.sum(player_stat_with_champs * player_weights_with_champs) / norm
+                    else:
+                        average = 0
+
+                    col_offset = offset * n_features + j
+                    new_ds[i, col_offset] = average
+                    i += 1
+                j += 1
+
+        # Compute new dataset for other attributes
+        for stat in other_stats:
+            role_stat = combine_into_labels(champs_in_role, [stat])
+            stat_with_champs = df.loc[:, role_stat]
+            weights_with_champs = df.loc[:, weight_features]
+
+            # Calculate weighted average for every player
+            i = 0
+            for index, row in stat_with_champs.iterrows():
+                player_stat_with_champs = row.as_matrix()
+                player_weights_with_champs = weights_with_champs.iloc[i,:].as_matrix()
+                norm = np.sum(player_weights_with_champs)
+
+                if norm != 0:
+                    average = np.sum(player_stat_with_champs * player_weights_with_champs) / norm
+                else:
+                    average = 0
+
+                col_offset = offset * n_features + j
+                new_ds[i, col_offset] = average
+                i += 1
+            j += 1
+
+    # Open new file
+    new_ds_file = open(resource_path + 'datasets/full/standardized_DS.tsv', 'w')
+    new_ds_file.write('\t'.join(all_new_features + placement_features))
+    new_ds_file.write('\n')
+
+    # Write dataset to new file
+    for n, row in enumerate(new_ds):
+        for col in row:
+            new_ds_file.write(str(col) + '\t')
+
+        elos = list(df.loc[n, placement_features])
+        elos = ["" if elo is np.NaN else elo for elo in elos]
+        new_ds_file.write('\t'.join(elos))
+        new_ds_file.write('\n')
+
 # thresholds = [10*(x+1) for x in range(10)]
 # for threshold in thresholds:
 #     split_dataset(threshold)
 
 # split_dataset()
 # dataset_v2(0)
+# standardize_dataset()
+# dsa
+# fill_missing_role_stats(1, True)
 # dataset_v2(869)
 # fill_missing_role_stats(threshold=1)
 # remove_missing_role_stats()

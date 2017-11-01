@@ -8,8 +8,10 @@ from sklearn.neural_network import MLPClassifier
 from ml import preprocessor as pp
 from tools import visualization as v
 from ml import ds_builder as ds
+from sklearn.decomposition import PCA
 
-data_set_file = 'ml/resources/datasets/working/pp_DS.tsv'
+# data_set_file = 'ml/resources/datasets/working/pp_DS.tsv'
+data_set_file = 'ml/resources/datasets/full/pp_standardized_DS.tsv'
 split_datasets_folder = 'ml/resources/datasets/all_champs/split/'
 split_datasets_names = ds.combine_into_labels(ds.all_riot_roles, ['DS.tsv'])
 
@@ -56,23 +58,14 @@ def benchmark_knn(data_set):
     print('KNN: ', scores)
     print('KNN: ', scores2)
 
-def benchmark_best_SVM(data_set, mode='ovo'):
-    X = data_set[:, :-1]
-    y = np.array(data_set[:, -1], dtype=int)
-
+def benchmark_best_SVM(X, y, mode='ovo'):
     clf = svm.SVC(kernel='rbf', C=30, gamma=0.001, tol=1e-3, probability=False, decision_function_shape=mode)
     scores = cross_val_score(clf, X, y, cv=10)
     print(max(scores), np.average(scores))
 
-def tune_SVM(data_set):
-    X = data_set[:, :-1]
-    y = np.array(data_set[:, -1], dtype=int)
-
-    # Cs = [0.001, 0.01, 0.1, 1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 100, 1000]
-    # gammas = [0.0001, 0.0025, 0.005, 0.0075, 0.001, 0.025, 0.005, 0.075, 0.01, 0.1, 1]
-    # shapes = ['ovo', 'ovr']
-    Cs = [25, 27, 30, 33, 35]
-    gammas = [0.0075, 0.008, 0.0085, 0.009, 0.0095, 0.001]
+def tune_SVM(X, y):
+    Cs = [0.001, 0.01, 0.1, 1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 100, 1000]
+    gammas = [0.0001, 0.0025, 0.005, 0.0075, 0.001, 0.025, 0.005, 0.075, 0.01, 0.1, 1]
     shapes = ['ovo']
     param_grid = {'C': Cs, 'gamma': gammas, 'decision_function_shape': shapes}
     grid_search = GridSearchCV(svm.SVC(kernel='rbf'), param_grid, cv=10, verbose=True)
@@ -80,7 +73,8 @@ def tune_SVM(data_set):
     print(grid_search.best_params_)
     print(grid_search.best_score_)
 
-def benchmark_ensemble():
+# Runs ensemble evaluation for different split dataset pool sizes
+def benchmark_ensemble_pool():
     for pool in range(10):
         print('>', (pool+1)*10)
         pool_description = str((pool+1)*10) + '/'
@@ -99,6 +93,31 @@ def benchmark_ensemble():
 
             benchmark_best_SVM(data_set)
 
+def benchmark_ensemble():
+    for ds in split_datasets_names:
+        data_set_file = split_datasets_folder +'90/' + ds
+
+        print(ds)
+        df = pd.read_csv(data_set_file, sep='\t', index_col=False)
+        features = list(df)
+
+        # Ignoring nick, flex elo and divisions
+        chosen = list(df.iloc[:,:-3].columns.values)
+
+        data_set, df = pp.preprocess(df, 4, features, chosen)
+        X = data_set[:, :-1]
+        y = np.array(data_set[:, -1], dtype=int)
+
+        print(generate_k_folds(X, y))
+        dsa
+
+        # clf = svm.SVC(kernel='rbf', C=30, gamma=0.001, tol=1e-3, probability=False, decision_function_shape='ovo')
+        # clf.fit(X, y)
+        # scores = cross_val_score(clf, X, y, cv=10)
+        # print(max(scores), np.average(scores))
+
+
+
 def run():
     print('Reading file')
     df = pd.read_csv(data_set_file, sep='\t', index_col=False)
@@ -110,13 +129,20 @@ def run():
 
     print('Preprocessing')
     data_set, df = pp.preprocess(df, 4, features, chosen)
+    X = data_set[:, :-1]
+    y = np.array(data_set[:, -1], dtype=int)
     print('Preprocessed')
 
+    # pca = PCA(n_components=50)
+    # pca.fit(X)
+    # pca_X = pca.transform(X)
+
     print('Training model')
-    benchmark_best_SVM(data_set)
+    benchmark_best_SVM(X, y)
+    # tune_SVM(X, y)
 
 # run()
-
+# benchmark_ensemble()
 
 # Initializing statistics fetcher
 # sf = stf.StatisticsFetcher(verbose=True)
